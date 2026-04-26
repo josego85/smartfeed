@@ -9,7 +9,7 @@ from .database import ArticleORM, engine
 
 class PgVectorStore(VectorStore):
     async def add(self, id: str, text: str, metadata: dict) -> None:
-        vec = embed(text)
+        vec = await embed(text)
         with Session(engine) as session:
             orm = session.get(ArticleORM, int(id))
             if orm:
@@ -17,7 +17,7 @@ class PgVectorStore(VectorStore):
                 session.commit()
 
     async def search(self, query: str, n_results: int = 10) -> list[SearchResult]:
-        vec = embed(query)
+        vec = await embed(query)
         stmt = (
             select(
                 ArticleORM,
