@@ -31,11 +31,22 @@ smartfeed/
 │   └── tests/
 │
 ├── frontend/                   # TypeScript — Next.js
+│   ├── messages/               # i18n translation files (en, es, de)
 │   ├── package.json
 │   └── src/
-│       ├── app/                # App Router pages
+│       ├── app/
+│       │   ├── page.tsx            # Root redirect → /en/articles
+│       │   └── [locale]/           # Locale-prefixed routes (en/es/de)
+│       │       ├── layout.tsx      # HTML lang attr + NextIntlClientProvider
+│       │       ├── articles/
+│       │       ├── feeds/
+│       │       └── search/
 │       ├── components/         # shadcn/ui + custom components
+│       ├── hooks/              # Custom React hooks (useArticles, useSearch, …)
+│       ├── i18n/               # next-intl config (routing.ts, request.ts)
 │       ├── lib/                # API client, utilities
+│       ├── middleware.ts       # Locale detection + redirect
+│       ├── navigation.ts       # Locale-aware Link / useRouter / usePathname
 │       └── types/              # TypeScript types (mirrored from backend schemas)
 │
 └── docker-compose.yml          # Runs both services together
@@ -120,6 +131,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 | Language | TypeScript |
 | UI components | `shadcn/ui` |
 | Styling | Tailwind CSS v4 |
+| i18n | `next-intl` — en / es / de, locale-prefixed routes |
 | Package manager | `pnpm` |
 | Data fetching | `TanStack Query` (React Query) |
 | HTTP client | `ky` or native `fetch` |
@@ -139,6 +151,13 @@ OLLAMA_BASE_URL=http://localhost:11434
   similarity — no labeled training data needed. Works fully offline.
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
+- **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
+  server-side message loading, automatic browser locale detection via middleware.
+  Switching language requires zero backend changes — purely frontend.
+- **SOLID hooks pattern**: all data-fetching and mutation logic lives in custom hooks
+  (`useArticles`, `useSearch`, `useFeedActions`, `useAddFeed`). Page components are
+  pure presentation — no direct API calls in render. Each component calls its own
+  `useTranslations`, no prop drilling.
 
 ## Development Commands
 
