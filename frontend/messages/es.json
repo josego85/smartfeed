@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "title": "SmartFeed",
+    "description": "Lector RSS personal con resúmenes de IA y búsqueda semántica"
+  },
+  "nav": {
+    "articles": "Artículos",
+    "search": "Búsqueda",
+    "feeds": "Fuentes",
+    "topics": "Temas",
+    "allTopics": "Todos los temas"
+  },
+  "articles": {
+    "title": "Todos los Artículos",
+    "unread": "no leído",
+    "read": "Leer",
+    "empty": "Sin artículos aún",
+    "emptyHint": "Añade algunas fuentes y sincronízalas para ver artículos aquí.",
+    "error": "No se pudieron cargar los artículos. ¿Está ejecutándose el servidor?"
+  },
+  "feeds": {
+    "title": "Fuentes",
+    "subtitle": "Gestiona tus fuentes RSS. Las fuentes se sincronizan automáticamente cada 30 minutos.",
+    "add": "Añadir Fuente",
+    "addLabel": "Añadir una nueva fuente",
+    "sync": "Sincronizar",
+    "synced": "¡Sincronizado!",
+    "empty": "Sin fuentes aún. Añade una arriba para empezar.",
+    "error": "No se pudieron cargar las fuentes. ¿Está ejecutándose el servidor?"
+  },
+  "search": {
+    "title": "Búsqueda Semántica",
+    "subtitle": "Busca por significado, no solo por palabras clave. Haz preguntas en lenguaje natural.",
+    "placeholder": "p. ej. \"cómo funciona RLHF\" o \"optimización de costos en kubernetes\"",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados para",
+    "results": "resultados",
+    "match": "coincidencia",
+    "read": "Leer",
+    "hint": "Escribe al menos 2 caracteres para comenzar a buscar"
+  }
+}

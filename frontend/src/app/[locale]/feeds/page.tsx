@@ -3,24 +3,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageSpinner, Spinner } from "@/components/ui/spinner";
+import { useAddFeed } from "@/hooks/useAddFeed";
+import { useFeedActions } from "@/hooks/useFeedActions";
 import { feedsApi } from "@/lib/api";
 import type { Feed } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, RefreshCw, Rss, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 function FeedRow({ feed }: { feed: Feed }) {
-  const queryClient = useQueryClient();
-
-  const syncMutation = useMutation({
-    mutationFn: () => feedsApi.sync(feed.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["articles"] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => feedsApi.delete(feed.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feeds"] }),
-  });
+  const t = useTranslations("feeds");
+  const { sync, remove } = useFeedActions(feed.id);
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -39,24 +32,22 @@ function FeedRow({ feed }: { feed: Feed }) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => syncMutation.mutate()}
-          disabled={syncMutation.isPending}
-          title="Sync feed"
+          onClick={() => sync.mutate()}
+          disabled={sync.isPending}
         >
-          {syncMutation.isPending ? (
+          {sync.isPending ? (
             <Spinner className="h-3.5 w-3.5" />
           ) : (
             <RefreshCw className="h-3.5 w-3.5" />
           )}
-          {syncMutation.isSuccess ? "Synced!" : "Sync"}
+          {sync.isSuccess ? t("synced") : t("sync")}
         </Button>
 
         <Button
           size="sm"
           variant="danger"
-          onClick={() => deleteMutation.mutate()}
-          disabled={deleteMutation.isPending}
-          title="Remove feed"
+          onClick={() => remove.mutate()}
+          disabled={remove.isPending}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -66,21 +57,8 @@ function FeedRow({ feed }: { feed: Feed }) {
 }
 
 function AddFeedForm() {
-  const [url, setUrl] = useState("");
-  const queryClient = useQueryClient();
-
-  const addMutation = useMutation({
-    mutationFn: () => feedsApi.add({ url }),
-    onSuccess: () => {
-      setUrl("");
-      queryClient.invalidateQueries({ queryKey: ["feeds"] });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url.trim()) addMutation.mutate();
-  };
+  const t = useTranslations("feeds");
+  const { url, setUrl, handleSubmit, isPending } = useAddFeed();
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-3">
@@ -93,16 +71,17 @@ function AddFeedForm() {
       <Button
         type="submit"
         variant="primary"
-        disabled={!url.trim() || addMutation.isPending}
+        disabled={!url.trim() || isPending}
       >
-        {addMutation.isPending ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        Add Feed
+        {isPending ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        {t("add")}
       </Button>
     </form>
   );
 }
 
 export default function FeedsPage() {
+  const t = useTranslations("feeds");
   const { data: feeds, isLoading, error } = useQuery({
     queryKey: ["feeds"],
     queryFn: feedsApi.list,
@@ -111,30 +90,22 @@ export default function FeedsPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
       <div className="mb-8">
-        <h1 className="mb-1 text-2xl font-bold text-slate-900">Feeds</h1>
-        <p className="text-sm text-slate-500">
-          Manage your RSS sources. Feeds sync automatically every 30 minutes.
-        </p>
+        <h1 className="mb-1 text-2xl font-bold text-slate-900">{t("title")}</h1>
+        <p className="text-sm text-slate-500">{t("subtitle")}</p>
       </div>
 
-      {/* Add feed */}
       <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="mb-3 text-sm font-medium text-slate-700">Add a new feed</p>
+        <p className="mb-3 text-sm font-medium text-slate-700">{t("addLabel")}</p>
         <AddFeedForm />
       </div>
 
-      {/* Feed list */}
       {isLoading && <PageSpinner />}
-      {error && (
-        <p className="text-center text-sm text-slate-400">
-          Could not load feeds. Is the backend running?
-        </p>
-      )}
+      {error && <p className="text-center text-sm text-slate-400">{t("error")}</p>}
 
-      {feeds && feeds.length === 0 && (
+      {feeds?.length === 0 && (
         <div className="py-16 text-center">
           <p className="text-4xl">📡</p>
-          <p className="mt-3 text-sm text-slate-400">No feeds yet. Add one above to get started.</p>
+          <p className="mt-3 text-sm text-slate-400">{t("empty")}</p>
         </div>
       )}
 

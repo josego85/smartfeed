@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "title": "SmartFeed",
+    "description": "Personal RSS reader with AI summaries and semantic search"
+  },
+  "nav": {
+    "articles": "Articles",
+    "search": "Search",
+    "feeds": "Feeds",
+    "topics": "Topics",
+    "allTopics": "All topics"
+  },
+  "articles": {
+    "title": "All Articles",
+    "unread": "unread",
+    "read": "Read",
+    "empty": "No articles yet",
+    "emptyHint": "Add some feeds and sync them to see articles here.",
+    "error": "Could not load articles. Is the backend running?"
+  },
+  "feeds": {
+    "title": "Feeds",
+    "subtitle": "Manage your RSS sources. Feeds sync automatically every 30 minutes.",
+    "add": "Add Feed",
+    "addLabel": "Add a new feed",
+    "sync": "Sync",
+    "synced": "Synced!",
+    "empty": "No feeds yet. Add one above to get started.",
+    "error": "Could not load feeds. Is the backend running?"
+  },
+  "search": {
+    "title": "Semantic Search",
+    "subtitle": "Search by meaning, not just keywords. Ask questions in plain language.",
+    "placeholder": "e.g. \"how does RLHF work\" or \"kubernetes cost optimization\"",
+    "searching": "Searching...",
+    "noResults": "No results found for",
+    "results": "results",
+    "match": "match",
+    "read": "Read",
+    "hint": "Type at least 2 characters to start searching"
+  }
+}

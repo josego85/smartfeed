@@ -7,12 +7,15 @@ import type { Article } from "@/types";
 import { ExternalLink, Sparkles } from "lucide-react";
 import { articlesApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleCardProps {
   article: Article;
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {
+  const t = useTranslations("articles");
+  const locale = useLocale();
   const meta = getTopicMeta(article.topic);
   const queryClient = useQueryClient();
 
@@ -68,7 +71,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
       {/* Footer */}
       <div className="mt-auto flex items-center justify-between text-xs text-slate-400">
-        <span>{formatDate(article.published_at ?? article.fetched_at)}</span>
+        <span>{formatDate(article.published_at ?? article.fetched_at, locale)}</span>
         <a
           href={article.url}
           target="_blank"
@@ -76,7 +79,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
           onClick={handleClick}
           className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
-          Read <ExternalLink className="h-3 w-3" />
+          {t("read")} <ExternalLink className="h-3 w-3" />
         </a>
       </div>
     </article>

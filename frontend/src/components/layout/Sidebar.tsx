@@ -3,34 +3,40 @@
 import { getTopicMeta, TOPICS } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 import { BookOpen, Rss, Search, Zap } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { Link, usePathname } from "@/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const NAV = [
-  { href: "/articles", label: "Articles", icon: BookOpen },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/feeds", label: "Feeds", icon: Rss },
+  { href: "/articles", labelKey: "nav.articles", icon: BookOpen },
+  { href: "/search", labelKey: "nav.search", icon: Search },
+  { href: "/feeds", labelKey: "nav.feeds", icon: Rss },
 ];
 
 export function Sidebar() {
+  const t = useTranslations();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeTopic = searchParams.get("topic");
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-slate-200 bg-slate-50">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 border-b border-slate-200 px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
-          <Zap className="h-4 w-4 text-white" />
+      {/* Logo + language switcher */}
+      <div className="border-b border-slate-200 px-4 py-3">
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
+            <Zap className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-base font-semibold text-slate-900">SmartFeed</span>
         </div>
-        <span className="text-base font-semibold text-slate-900">SmartFeed</span>
+        <LanguageSwitcher />
       </div>
 
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-4">
         {/* Navigation */}
         <nav className="flex flex-col gap-0.5">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
@@ -44,7 +50,7 @@ export function Sidebar() {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                {t(labelKey)}
               </Link>
             );
           })}
@@ -53,7 +59,7 @@ export function Sidebar() {
         {/* Topics filter */}
         <div>
           <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Topics
+            {t("nav.topics")}
           </p>
           <div className="flex flex-col gap-0.5">
             <Link
@@ -66,7 +72,7 @@ export function Sidebar() {
               )}
             >
               <span className="h-2 w-2 rounded-full bg-slate-400" />
-              All topics
+              {t("nav.allTopics")}
             </Link>
 
             {TOPICS.map((topic) => {
@@ -91,6 +97,7 @@ export function Sidebar() {
           </div>
         </div>
       </div>
+
     </aside>
   );
 }
