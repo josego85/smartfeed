@@ -2,40 +2,31 @@
 
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { PageSpinner } from "@/components/ui/spinner";
-import { articlesApi } from "@/lib/api";
+import { useArticles } from "@/hooks/useArticles";
 import { getTopicMeta } from "@/lib/topics";
-import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
 
 function ArticlesContent() {
-  const searchParams = useSearchParams();
-  const topic = searchParams.get("topic") ?? undefined;
+  const t = useTranslations("articles");
+  const { articles, isLoading, error, topic, unreadCount } = useArticles();
 
-  const { data: articles, isLoading, error } = useQuery({
-    queryKey: ["articles", topic],
-    queryFn: () => articlesApi.list({ topic, limit: 100 }),
-  });
-
-  const heading = topic ? getTopicMeta(topic).label : "All Articles";
-  const unreadCount = articles?.filter((a) => !a.is_read).length ?? 0;
+  const heading = topic ? getTopicMeta(topic).label : t("title");
 
   if (isLoading) return <PageSpinner />;
   if (error) return <ErrorState />;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      {/* Header */}
       <div className="mb-8 flex items-baseline gap-3">
         <h1 className="text-2xl font-bold text-slate-900">{heading}</h1>
         {unreadCount > 0 && (
           <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-            {unreadCount} unread
+            {unreadCount} {t("unread")}
           </span>
         )}
       </div>
 
-      {/* Articles grid */}
       {articles?.length === 0 ? (
         <EmptyState />
       ) : (
@@ -50,22 +41,22 @@ function ArticlesContent() {
 }
 
 function EmptyState() {
+  const t = useTranslations("articles");
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <p className="text-4xl">📭</p>
-      <p className="mt-3 text-base font-medium text-slate-700">No articles yet</p>
-      <p className="mt-1 text-sm text-slate-400">
-        Add some feeds and sync them to see articles here.
-      </p>
+      <p className="mt-3 text-base font-medium text-slate-700">{t("empty")}</p>
+      <p className="mt-1 text-sm text-slate-400">{t("emptyHint")}</p>
     </div>
   );
 }
 
 function ErrorState() {
+  const t = useTranslations("articles");
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <p className="text-4xl">⚠️</p>
-      <p className="mt-3 text-sm text-slate-500">Could not load articles. Is the backend running?</p>
+      <p className="mt-3 text-sm text-slate-500">{t("error")}</p>
     </div>
   );
 }

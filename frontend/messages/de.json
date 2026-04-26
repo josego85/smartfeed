@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "title": "SmartFeed",
+    "description": "Persönlicher RSS-Reader mit KI-Zusammenfassungen und semantischer Suche"
+  },
+  "nav": {
+    "articles": "Artikel",
+    "search": "Suche",
+    "feeds": "Quellen",
+    "topics": "Themen",
+    "allTopics": "Alle Themen"
+  },
+  "articles": {
+    "title": "Alle Artikel",
+    "unread": "ungelesen",
+    "read": "Lesen",
+    "empty": "Noch keine Artikel",
+    "emptyHint": "Fügen Sie Quellen hinzu und synchronisieren Sie diese, um Artikel hier zu sehen.",
+    "error": "Artikel konnten nicht geladen werden. Läuft der Server?"
+  },
+  "feeds": {
+    "title": "Quellen",
+    "subtitle": "Verwalten Sie Ihre RSS-Quellen. Quellen werden alle 30 Minuten automatisch synchronisiert.",
+    "add": "Quelle Hinzufügen",
+    "addLabel": "Neue Quelle hinzufügen",
+    "sync": "Synchronisieren",
+    "synced": "Synchronisiert!",
+    "empty": "Noch keine Quellen. Fügen Sie oben eine hinzu, um zu beginnen.",
+    "error": "Quellen konnten nicht geladen werden. Läuft der Server?"
+  },
+  "search": {
+    "title": "Semantische Suche",
+    "subtitle": "Suchen Sie nach Bedeutung, nicht nur nach Schlüsselwörtern. Stellen Sie Fragen in natürlicher Sprache.",
+    "placeholder": "z.B. \"wie funktioniert RLHF\" oder \"Kubernetes-Kostenoptimierung\"",
+    "searching": "Suche läuft...",
+    "noResults": "Keine Ergebnisse für",
+    "results": "Ergebnisse",
+    "match": "Übereinstimmung",
+    "read": "Lesen",
+    "hint": "Geben Sie mindestens 2 Zeichen ein, um mit der Suche zu beginnen"
+  }
+}
