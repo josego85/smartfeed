@@ -22,10 +22,12 @@ smartfeed/
 │   ├── .env.example
 │   ├── src/
 │   │   └── app/
-│   │       ├── core/           # Domain models and interfaces (no external deps)
-│   │       ├── ingestion/      # RSS fetching and scheduling
+│   │       ├── core/           # Domain models, interfaces, config
+│   │       ├── ingestion/      # RSS fetching
 │   │       ├── processing/     # Classification, embeddings, summarization
 │   │       ├── storage/        # PostgreSQL + pgvector (articles + embeddings)
+│   │       ├── services/       # FeedSyncService — orchestrates sync pipeline
+│   │       ├── jobs/           # ARQ job queue + worker (ArqJobQueue, WorkerSettings)
 │   │       ├── api/            # FastAPI REST endpoints
 │   │       └── cli/            # Typer CLI for ops
 │   └── tests/
@@ -42,14 +44,15 @@ smartfeed/
 │       │       ├── feeds/
 │       │       └── search/
 │       ├── components/         # shadcn/ui + custom components
+│       ├── contexts/           # SyncContext — global sync job state
 │       ├── hooks/              # Custom React hooks (useArticles, useSearch, …)
 │       ├── i18n/               # next-intl config (routing.ts, request.ts)
-│       ├── lib/                # API client, utilities
+│       ├── lib/                # API client, constants, utilities
 │       ├── middleware.ts       # Locale detection + redirect
 │       ├── navigation.ts       # Locale-aware Link / useRouter / usePathname
 │       └── types/              # TypeScript types (mirrored from backend schemas)
 │
-└── docker-compose.yml          # Runs both services together
+└── docker-compose.yml          # Runs postgres, redis, backend, worker, frontend
 ```
 
 ### Backend layer rules
@@ -114,13 +117,13 @@ OLLAMA_BASE_URL=http://localhost:11434
 | Models / validation | `pydantic` v2 |
 | Config | `pydantic-settings` + `.env` |
 | ORM + DB | `SQLAlchemy` + PostgreSQL (`psycopg2`) |
-| Vector store | `pgvector` (PostgreSQL extension, `Vector(384)` column) |
-| Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) |
+| Vector store | `pgvector` (PostgreSQL extension, `Vector(768)` column) |
+| Embeddings | Ollama `nomic-embed-text` via HTTP (768-dim) |
 | LLM (primary) | Ollama — `llama3.2` or any local model |
 | LLM (cloud fallback) | Claude, OpenAI, OpenRouter via `litellm` |
 | REST API | `FastAPI` + `uvicorn` |
+| Job queue | `arq` + Redis — non-blocking sync, cron auto-sync |
 | CLI | `Typer` |
-| Scheduler | `APScheduler` |
 | Testing | `pytest` + `pytest-asyncio` |
 
 ### Frontend
@@ -158,6 +161,17 @@ OLLAMA_BASE_URL=http://localhost:11434
   (`useArticles`, `useSearch`, `useFeedActions`, `useAddFeed`). Page components are
   pure presentation — no direct API calls in render. Each component calls its own
   `useTranslations`, no prop drilling.
+- **Non-blocking sync with ARQ + Redis**: `POST /feeds/{id}/sync` enqueues an ARQ job
+  and returns `202` in <10 ms. Worker runs `FeedSyncService` in a separate process
+  and publishes to Redis Pub/Sub on completion.
+- **SSE for real-time notifications**: `GET /feeds/sync-events` streams Redis Pub/Sub
+  events to the browser via Server-Sent Events. `SyncMonitor` holds one `EventSource`
+  per tab — zero polling. On page refresh, recovers in-progress jobs from
+  `localStorage` and does a one-time HTTP status check.
+- **Centralized config**: all tunables (`embedding_model`, `embedding_dim`, char
+  limits, concurrency, pagination, timeouts) live in `Settings` (pydantic-settings)
+  and are overridable via `.env`. Frontend equivalents live in `lib/constants.ts`
+  with `NEXT_PUBLIC_*` env var support.
 
 ## Development Commands
 
@@ -167,6 +181,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 cd backend
 uv sync
 uv run uvicorn app.api.main:app --reload   # http://localhost:8000
+uv run arq app.jobs.worker.WorkerSettings  # ARQ worker (separate terminal)
 uv run pytest
 uv run ruff check . && uv run ruff format .
 ```
@@ -195,9 +210,11 @@ docker compose down -v && docker compose up --build
 
 ```env
 DATABASE_URL=postgresql://smartfeed:smartfeed@localhost:5432/smartfeed
+REDIS_URL=redis://localhost:6379
 LLM_PROVIDER=ollama
 LLM_MODEL=llama3.2
 OLLAMA_BASE_URL=http://localhost:11434
+# All other tunables have defaults — see backend/.env.example
 ```
 
 ### Frontend `frontend/.env.local`
