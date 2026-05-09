@@ -129,3 +129,18 @@ class PostgresRepository(FeedRepository):
             if orm:
                 orm.is_read = True
                 session.commit()
+
+    async def get_articles_by_ids(self, article_ids: list[int]) -> list[Article]:
+        if not article_ids:
+            return []
+        with Session(engine) as session:
+            rows = session.query(ArticleORM).filter(ArticleORM.id.in_(article_ids)).all()
+            return [_to_article(orm) for orm in rows]
+
+    async def update_article_enrichment(self, article_id: int, topic: str, summary: str) -> None:
+        with Session(engine) as session:
+            orm = session.get(ArticleORM, article_id)
+            if orm:
+                orm.topic = topic
+                orm.summary = summary
+                session.commit()

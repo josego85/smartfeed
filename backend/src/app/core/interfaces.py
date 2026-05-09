@@ -40,6 +40,12 @@ class FeedRepository(ABC):
     @abstractmethod
     async def delete_feed(self, feed_id: int) -> None: ...
 
+    @abstractmethod
+    async def get_articles_by_ids(self, article_ids: list[int]) -> list[Article]: ...
+
+    @abstractmethod
+    async def update_article_enrichment(self, article_id: int, topic: str, summary: str) -> None: ...
+
 
 class VectorStore(ABC):
     @abstractmethod
