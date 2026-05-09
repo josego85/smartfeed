@@ -3,6 +3,7 @@ import litellm
 from ..core.config import settings
 from ..core.interfaces import Summarizer
 
+
 _SYSTEM_PROMPT = (
     "You are a concise technical writer. "
     "Summarize the article in 2-3 sentences focusing on the key insight. "
@@ -27,7 +28,7 @@ class LiteLLMSummarizer(Summarizer):
             api_base=self._api_base(),
             messages=[
                 {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": text[:4000]},
+                {"role": "user", "content": text[:settings.max_summarize_chars]},
             ],
         )
         return response.choices[0].message.content.strip()

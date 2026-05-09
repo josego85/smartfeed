@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from .models import Feed, Article, SearchResult
+from datetime import datetime
+from .models import Feed, Article, SearchResult, SyncJobStatus
 
 
 class FeedRepository(ABC):
@@ -13,7 +14,13 @@ class FeedRepository(ABC):
     async def get_feed(self, feed_id: int) -> Feed | None: ...
 
     @abstractmethod
-    async def save_article(self, article: Article) -> Article: ...
+    async def save_articles_bulk(self, articles: list[Article]) -> list[Article]: ...
+
+    @abstractmethod
+    async def get_existing_urls(self, feed_id: int) -> set[str]: ...
+
+    @abstractmethod
+    async def update_feed_sync_time(self, feed_id: int, synced_at: datetime) -> None: ...
 
     @abstractmethod
     async def list_articles(
@@ -45,3 +52,11 @@ class VectorStore(ABC):
 class Summarizer(ABC):
     @abstractmethod
     async def summarize(self, text: str) -> str: ...
+
+
+class JobQueue(ABC):
+    @abstractmethod
+    async def enqueue_sync(self, feed_id: int) -> str: ...
+
+    @abstractmethod
+    async def get_status(self, job_id: str) -> SyncJobStatus: ...

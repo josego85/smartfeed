@@ -24,7 +24,12 @@
     "add": "Quelle Hinzufügen",
     "addLabel": "Neue Quelle hinzufügen",
     "sync": "Synchronisieren",
+    "syncing": "Synchronisierung…",
     "synced": "Synchronisiert!",
+    "syncFailed": "Fehler",
+    "syncResultNew": "{count} neue Artikel",
+    "syncActivity": "Synchronisierung",
+    "lastSynced": "Zuletzt synchronisiert: {date}",
     "empty": "Noch keine Quellen. Fügen Sie oben eine hinzu, um zu beginnen.",
     "error": "Quellen konnten nicht geladen werden. Läuft der Server?"
   },

@@ -6,8 +6,6 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 
 from ..core.config import settings
 
-EMBEDDING_DIM = 384  # all-MiniLM-L6-v2
-
 
 class Base(DeclarativeBase):
     pass
@@ -21,6 +19,7 @@ class FeedORM(Base):
     title = Column(String, default="")
     description = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
+    last_synced_at = Column(DateTime, nullable=True)
     articles = relationship("ArticleORM", back_populates="feed", cascade="all, delete-orphan")
 
 
@@ -37,7 +36,7 @@ class ArticleORM(Base):
     published_at = Column(DateTime, nullable=True)
     fetched_at = Column(DateTime, default=datetime.utcnow)
     is_read = Column(Boolean, default=False)
-    embedding = Column(Vector(EMBEDDING_DIM), nullable=True)
+    embedding = Column(Vector(settings.embedding_dim), nullable=True)
     feed = relationship("FeedORM", back_populates="articles")
 
 

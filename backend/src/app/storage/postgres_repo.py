@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from ..core.interfaces import FeedRepository
@@ -8,7 +9,13 @@ from .database import ArticleORM, FeedORM, engine
 
 
 def _to_feed(orm: FeedORM) -> Feed:
-    return Feed(id=orm.id, url=orm.url, title=orm.title, description=orm.description)
+    return Feed(
+        id=orm.id,
+        url=orm.url,
+        title=orm.title,
+        description=orm.description,
+        last_synced_at=orm.last_synced_at,
+    )
 
 
 def _to_article(orm: ArticleORM) -> Article:
@@ -54,23 +61,46 @@ class PostgresRepository(FeedRepository):
                 session.delete(orm)
                 session.commit()
 
-    async def save_article(self, article: Article) -> Article:
+    async def get_existing_urls(self, feed_id: int) -> set[str]:
         with Session(engine) as session:
-            if session.query(ArticleORM).filter_by(url=article.url).first():
-                return article
-            orm = ArticleORM(
-                feed_id=article.feed_id,
-                url=article.url,
-                title=article.title,
-                content=article.content,
-                summary=article.summary,
-                topic=article.topic,
-                published_at=article.published_at,
+            rows = (
+                session.query(ArticleORM.url)
+                .filter_by(feed_id=feed_id)
+                .all()
             )
-            session.add(orm)
+            return {row.url for row in rows}
+
+    async def save_articles_bulk(self, articles: list[Article]) -> list[Article]:
+        if not articles:
+            return []
+        with Session(engine) as session:
+            rows = [
+                {
+                    "feed_id": a.feed_id,
+                    "url": a.url,
+                    "title": a.title,
+                    "content": a.content,
+                    "summary": a.summary,
+                    "topic": a.topic,
+                    "published_at": a.published_at,
+                }
+                for a in articles
+            ]
+            stmt = pg_insert(ArticleORM).values(rows).on_conflict_do_nothing(
+                index_elements=["url"]
+            )
+            session.execute(stmt)
             session.commit()
-            session.refresh(orm)
-            return _to_article(orm)
+            urls = [a.url for a in articles]
+            saved = session.query(ArticleORM).filter(ArticleORM.url.in_(urls)).all()
+            return [_to_article(orm) for orm in saved]
+
+    async def update_feed_sync_time(self, feed_id: int, synced_at: datetime) -> None:
+        with Session(engine) as session:
+            orm = session.get(FeedORM, feed_id)
+            if orm:
+                orm.last_synced_at = synced_at
+                session.commit()
 
     async def list_articles(
         self,

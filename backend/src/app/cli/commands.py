@@ -1,8 +1,9 @@
 import asyncio
 import typer
+from ..core.config import settings
 from ..core.models import Feed
 from ..api.dependencies import get_repo, get_vector_store, get_summarizer
-from ..ingestion.scheduler import sync_all_feeds
+from ..services.sync_service import FeedSyncService
 
 app = typer.Typer(help="SmartFeed CLI")
 
@@ -29,17 +30,26 @@ def feeds_list():
 
 @app.command()
 def feeds_sync():
-    """Sync all feeds: fetch, classify, summarize, and index articles."""
+    """Sync all feeds via FeedSyncService (fetch, classify, summarize, index)."""
     repo = get_repo()
-    vector_store = get_vector_store()
-    summarizer = get_summarizer()
-    typer.echo("Syncing all feeds...")
-    asyncio.run(sync_all_feeds(repo, vector_store, summarizer))
-    typer.echo("Done.")
+    service = FeedSyncService(repo, get_vector_store(), get_summarizer())
+
+    async def run() -> None:
+        feeds = await repo.list_feeds()
+        for feed in feeds:
+            if feed.id is None:
+                continue
+            typer.echo(f"Syncing {feed.title or feed.url}...")
+            result = await service.sync(feed.id)
+            typer.echo(
+                f"  fetched={result.fetched}  new={result.new}  skipped={result.skipped}"
+            )
+
+    asyncio.run(run())
 
 
 @app.command()
-def search(query: str, n: int = 10):
+def search(query: str, n: int = settings.search_default_results):
     """Search articles using semantic search."""
     vector_store = get_vector_store()
     results = asyncio.run(vector_store.search(query=query, n_results=n))

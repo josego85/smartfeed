@@ -24,7 +24,12 @@
     "add": "Add Feed",
     "addLabel": "Add a new feed",
     "sync": "Sync",
+    "syncing": "Syncing…",
     "synced": "Synced!",
+    "syncFailed": "Failed",
+    "syncResultNew": "{count} new articles",
+    "syncActivity": "Syncing",
+    "lastSynced": "Last synced: {date}",
     "empty": "No feeds yet. Add one above to get started.",
     "error": "Could not load feeds. Is the backend running?"
   },

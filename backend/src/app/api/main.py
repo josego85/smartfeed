@@ -1,25 +1,20 @@
 from contextlib import asynccontextmanager
 
+from arq.connections import RedisSettings, create_pool
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..core.config import settings
 from ..storage.database import init_db
-from .dependencies import get_repo, get_vector_store, get_summarizer
 from .routes import articles, feeds, search
-from ..ingestion import scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    scheduler.start(
-        repo=get_repo(),
-        vector_store=get_vector_store(),
-        summarizer=get_summarizer(),
-    )
+    app.state.redis_pool = await create_pool(RedisSettings.from_dsn(settings.redis_url))
     yield
-    scheduler.scheduler.shutdown()
+    await app.state.redis_pool.aclose()
 
 
 app = FastAPI(title="SmartFeed API", version="0.1.0", lifespan=lifespan)

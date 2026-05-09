@@ -1,7 +1,8 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic Versioning](https://semver.org/).
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
+[Semantic Versioning](https://semver.org/).
 
 ---
 
@@ -13,19 +14,44 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 #### Added
 
-- FastAPI REST API: feeds CRUD, article listing with topic/feed filters, semantic search
-- PostgreSQL + pgvector as unified storage: relational data and `Vector(384)` embeddings in one DB
-- `PostgresRepository` and `PgVectorStore` implementing `core/` interfaces — swappable without touching business logic
-- Zero-shot classifier via async Ollama embeddings (`nomic-embed-text`) — keyword
-  descriptions, no labeled training data needed
-- RSS/Atom ingestion with browser `User-Agent` header to avoid 403 rejections
-- APScheduler background sync: fetch → classify → summarize → embed pipeline
-- LLM summarization via `litellm` — Ollama by default, Claude/OpenAI/OpenRouter via single env var swap
-- Typer CLI for ops: `feeds_add`, `feeds_list`, `feeds_sync`, `search`
-- Embeddings and LLM unified via Ollama (eliminates torch/sentence-transformers
-  2GB+ dependency, 5-10 min Docker builds)
-- Dependency pinning with exact versions (security, reproducibility, and faster
-  builds)
+- FastAPI REST API: feeds CRUD, article listing with topic/feed
+  filters, semantic search
+- PostgreSQL + pgvector: relational data and `Vector(768)` embeddings
+  in one DB
+- `PostgresRepository` and `PgVectorStore` implementing `core/`
+  interfaces — swappable without touching business logic
+- Zero-shot topic classifier via Ollama embeddings
+  (`nomic-embed-text`) — keyword descriptions, no training data needed
+- RSS/Atom ingestion with browser `User-Agent` to avoid 403s
+- LLM summarization via `litellm` — Ollama by default,
+  Claude/OpenAI/OpenRouter via single env var swap
+- Typer CLI: `feeds_add`, `feeds_list`, `feeds_sync`, `search`
+- Dependency pinning with exact versions (reproducibility, fast builds)
+- `FeedSyncService`: deduplication with one bulk DB query, concurrent
+  classify+summarize per article (`asyncio.Semaphore`), bulk insert
+  via `ON CONFLICT DO NOTHING`
+- ARQ + Redis background job queue: `POST /feeds/{id}/sync` returns
+  `202 Accepted` in <10 ms; sync runs in a separate worker process
+- ARQ cron job (`sync_all_feeds_job`): auto-sync every 30 min through
+  the same `FeedSyncService` path
+- `GET /feeds/sync-events` SSE endpoint backed by Redis Pub/Sub:
+  worker publishes on completion, browser notified in ~50 ms — no
+  polling
+- `GET /feeds/{id}/sync-status` for one-time check on page refresh
+- All tunables in `Settings` (pydantic-settings), overridable via
+  `.env`: HTTP timeout, embedding model/dim, char limits,
+  concurrency, pagination, worker settings
+
+#### Changed
+
+- `cli feeds_sync` uses `FeedSyncService` — was one-by-one inline sync
+- Embedding dimension corrected 384 → 768 (`nomic-embed-text` actual)
+- `embedding_model` and `embedding_dim` moved to `Settings`
+
+#### Removed
+
+- APScheduler (`apscheduler` dependency) — replaced by ARQ cron job
+- `FeedRepository.save_article()` — replaced by `save_articles_bulk`
 
 ---
 
@@ -36,36 +62,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 - Next.js 15 App Router with `shadcn/ui` and Tailwind CSS v4
 - Feed management: add, list, sync, delete
 - Article listing with topic filter and read/unread tracking
-- Semantic search view with ranked results and similarity score
-- TanStack Query for server state management and background refetching
-- i18n via `next-intl`: English, Spanish (ES), and German with
-  SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`)
-- `LanguageSwitcher` segmented-control component (flag + code,
-  iOS-style, placed at top of sidebar) for locale switching
-- Translation message files (`messages/en.json`, `es.json`, `de.json`)
-  covering namespaces: `nav`, `articles`, `feeds`, `search`, `metadata`
+- Semantic search with ranked results and similarity score
+- TanStack Query: cache, deduplication, invalidation on sync completion
+- i18n via `next-intl`: EN/ES/DE, locale-prefixed routes
+  (`/en/`, `/es/`, `/de/`)
+- `LanguageSwitcher` segmented-control component
+- Translation files (`messages/en.json`, `es.json`, `de.json`)
+- `SyncContext` + `SyncProvider`: global sync job state persisted in
+  `localStorage` — survives navigation and page refresh (SSR-safe)
+- `SyncMonitor`: single `EventSource` to `/feeds/sync-events`;
+  invalidates TanStack Query cache on completion; one-time HTTP check
+  for jobs recovered from `localStorage` after refresh
+- `SyncStatusSection` in Sidebar: live progress per job
+- `SyncButton` in feeds page: real-time state per feed
+- `lib/constants.ts`: all tunables in one place, each overridable via
+  `NEXT_PUBLIC_*` build-time env var
 
 #### Changed
 
-- Routes moved under `src/app/[locale]/` — middleware auto-detects
-  and redirects to the preferred locale
-- `useArticles(topic)` hook extracts data fetching and `unreadCount`
-  derivation out of the articles page render
-- `useFeedActions(feedId)` hook encapsulates sync and delete mutations
-  out of `FeedRow`
-- `useAddFeed()` hook encapsulates URL state, mutation, and submit
-  handler out of `AddFeedForm`
-- `useSearch()` hook extracts debounce logic and semantic query out of
-  the search page
-- Each component calls its own `useTranslations` — no prop drilling of
-  `t`
+- Routes under `src/app/[locale]/` — middleware auto-detects locale
+- `useFeedActions` tracks enqueued job via `SyncContext`
+- `BASE_URL` exported from `lib/api.ts` — no duplication
+- `TERMINAL_STATUSES` moved from context to `lib/constants.ts`
+- `QueryClient`: `staleTime: 30 s`, `refetchOnWindowFocus: false`
+- SOLID hooks: pages are pure presentation, no direct API calls
+- Each component calls its own `useTranslations` — no prop drilling
 
 #### Fixed
 
-- `ArticleCard` "Read" link was hardcoded English — now translated via
-  `t("articles.read")` in the active locale
-- `formatDate` ignored the active locale — now receives `useLocale()`
-  so relative dates render in the correct language
+- `ArticleCard` "Read" link hardcoded English — now uses active locale
+- `formatDate` ignored locale — relative dates now render correctly
 
 ---
 
@@ -73,4 +99,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 #### Added
 
-- Docker Compose: `pgvector/pgvector:pg17`, named volume `pgdata`, backend startup gated on DB healthcheck
+- Docker Compose: `pgvector/pgvector:pg17`, named volume `pgdata`,
+  backend startup gated on DB healthcheck
+- Redis service (`redis:7-alpine`) with healthcheck
+- ARQ worker service — same image as backend,
+  `uv run arq app.jobs.worker.WorkerSettings`

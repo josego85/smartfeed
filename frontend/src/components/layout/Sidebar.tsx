@@ -1,8 +1,10 @@
 "use client";
 
+import { useSyncContext } from "@/contexts/sync";
+import type { SyncJob } from "@/contexts/sync";
 import { getTopicMeta, TOPICS } from "@/lib/topics";
 import { cn } from "@/lib/utils";
-import { BookOpen, Rss, Search, Zap } from "lucide-react";
+import { BookOpen, CheckCircle, Loader2, Rss, Search, XCircle, Zap } from "lucide-react";
 import { Link, usePathname } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,6 +15,49 @@ const NAV = [
   { href: "/search", labelKey: "nav.search", icon: Search },
   { href: "/feeds", labelKey: "nav.feeds", icon: Rss },
 ];
+
+function SyncJobRow({ job }: { job: SyncJob }) {
+  const t = useTranslations("feeds");
+  const isActive = job.status === "queued" || job.status === "in_progress";
+  const isComplete = job.status === "complete";
+  const isFailed = job.status === "failed";
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg px-3 py-1.5">
+      {isActive && <Loader2 className="h-3 w-3 shrink-0 animate-spin text-blue-500" />}
+      {isComplete && <CheckCircle className="h-3 w-3 shrink-0 text-green-500" />}
+      {isFailed && <XCircle className="h-3 w-3 shrink-0 text-red-400" />}
+      <div className="min-w-0">
+        <p className="truncate text-xs text-slate-700">{job.feedTitle}</p>
+        {isComplete && job.result && (
+          <p className="text-[10px] text-slate-400">
+            {t("syncResultNew", { count: job.result.new })}
+          </p>
+        )}
+        {isFailed && (
+          <p className="text-[10px] text-red-400">{t("syncFailed")}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SyncStatusSection() {
+  const t = useTranslations("feeds");
+  const { jobs } = useSyncContext();
+  if (jobs.length === 0) return null;
+
+  return (
+    <div className="border-t border-slate-200 px-0 py-3">
+      <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        {t("syncActivity")}
+      </p>
+      {jobs.map((job) => (
+        <SyncJobRow key={job.jobId} job={job} />
+      ))}
+    </div>
+  );
+}
 
 export function Sidebar() {
   const t = useTranslations();
@@ -98,6 +143,7 @@ export function Sidebar() {
         </div>
       </div>
 
+      <SyncStatusSection />
     </aside>
   );
 }
