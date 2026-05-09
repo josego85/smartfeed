@@ -1,80 +1,26 @@
 import numpy as np
 
 from ..core.config import settings
+from ..core.models import Topic
 from .embeddings import embed, embed_batch
-
-# Rich keyword descriptions improve zero-shot accuracy significantly.
-# The model compares article embeddings against these, not just the short label.
-_TOPIC_DESCRIPTIONS: dict[str, str] = {
-    "Artificial Intelligence & Machine Learning": (
-        "artificial intelligence machine learning deep learning neural network large language model "
-        "LLM GPT ChatGPT OpenAI Anthropic Claude Gemini Llama model training transformer "
-        "NLP natural language processing computer vision AI research foundation model "
-        "diffusion model reinforcement learning AI assistant benchmark fine-tuning"
-    ),
-    "Web Development & Frontend": (
-        "web development frontend backend JavaScript TypeScript React Vue Angular CSS HTML "
-        "Next.js Tailwind REST API GraphQL Node.js web framework browser UI design UX "
-        "web performance SPA server-side rendering full stack developer web app"
-    ),
-    "DevOps & Infrastructure": (
-        "DevOps infrastructure cloud computing AWS Azure Google Cloud Kubernetes Docker container "
-        "CI CD pipeline deployment monitoring Terraform Ansible SRE reliability scalability "
-        "microservices serverless platform engineering GitOps observability logging"
-    ),
-    "Programming Languages & Tooling": (
-        "programming language Python Go Rust Java C++ Swift Kotlin compiler interpreter "
-        "IDE developer tools package manager SDK framework software engineering code quality "
-        "testing debugging refactoring software architecture design patterns API library"
-    ),
-    "Cybersecurity": (
-        "cybersecurity information security hacking data breach ransomware malware phishing "
-        "network security vulnerability CVE zero-day encryption penetration testing "
-        "CISO threat intelligence exploit firewall authentication privacy GDPR attack defense"
-    ),
-    "Open Source & Linux": (
-        "open source Linux GitHub free software GPL license open source project "
-        "Linux distribution Ubuntu Debian Fedora kernel bash community software "
-        "git repository contribution fork pull request open source maintainer"
-    ),
-    "Hardware & Electronics": (
-        "hardware electronics CPU GPU processor chip semiconductor FPGA embedded systems "
-        "IoT Internet of Things Arduino Raspberry Pi circuit PCB electronics engineering "
-        "Intel AMD ARM RISC-V robotics 3D printing sensors microcontroller"
-    ),
-    "Science & Research": (
-        "science research scientific study academic paper physics biology chemistry "
-        "mathematics quantum computing space astronomy neuroscience genomics "
-        "climate science technology research innovation breakthrough experiment peer review"
-    ),
-}
 
 _topic_embeddings: dict[str, list[float]] = {}
 
 
-def _description_for(topic: str) -> str:
-    return _TOPIC_DESCRIPTIONS.get(topic, topic)
-
-
-async def _load_topic_embeddings() -> dict[str, list[float]]:
+async def classify(text: str, topics: list[Topic]) -> str:
     global _topic_embeddings
-    if not _topic_embeddings:
-        descriptions = [_description_for(t) for t in settings.topics]
-        vectors = await embed_batch(descriptions)
-        _topic_embeddings = dict(zip(settings.topics, vectors))
-    return _topic_embeddings
-
-
-async def classify(text: str) -> str:
-    # Full content dilutes the classification signal — leading chars carry the topic.
     truncated = text[:settings.max_classify_chars]
     article_vec = np.array(await embed(truncated))
-    topic_vecs = await _load_topic_embeddings()
 
-    best_topic = settings.topics[0]
+    if not _topic_embeddings:
+        descriptions = [t.description for t in topics]
+        vectors = await embed_batch(descriptions)
+        _topic_embeddings = {t.name: vec for t, vec in zip(topics, vectors)}
+
+    best_topic = topics[0].name if topics else ""
     best_score = -1.0
 
-    for topic, vec in topic_vecs.items():
+    for name, vec in _topic_embeddings.items():
         topic_vec = np.array(vec)
         score = float(
             np.dot(article_vec, topic_vec)
@@ -82,6 +28,6 @@ async def classify(text: str) -> str:
         )
         if score > best_score:
             best_score = score
-            best_topic = topic
+            best_topic = name
 
     return best_topic

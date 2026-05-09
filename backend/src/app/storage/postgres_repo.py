@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..core.interfaces import FeedRepository
-from ..core.models import Article, Feed
-from .database import ArticleORM, FeedORM, engine
+from ..core.models import Article, Feed, Topic
+from .database import ArticleORM, FeedORM, TopicORM, engine
 
 
 def _to_feed(orm: FeedORM) -> Feed:
@@ -26,11 +26,15 @@ def _to_article(orm: ArticleORM) -> Article:
         title=orm.title,
         content=orm.content,
         summary=orm.summary,
-        topic=orm.topic,
+        topic=orm.topic.name if orm.topic else "",
         published_at=orm.published_at,
         fetched_at=orm.fetched_at,
         is_read=orm.is_read,
     )
+
+
+def _to_topic(orm: TopicORM) -> Topic:
+    return Topic(id=orm.id, name=orm.name, description=orm.description)
 
 
 class PostgresRepository(FeedRepository):
@@ -81,7 +85,6 @@ class PostgresRepository(FeedRepository):
                     "title": a.title,
                     "content": a.content,
                     "summary": a.summary,
-                    "topic": a.topic,
                     "published_at": a.published_at,
                 }
                 for a in articles
@@ -92,7 +95,12 @@ class PostgresRepository(FeedRepository):
             session.execute(stmt)
             session.commit()
             urls = [a.url for a in articles]
-            saved = session.query(ArticleORM).filter(ArticleORM.url.in_(urls)).all()
+            saved = (
+                session.query(ArticleORM)
+                .options(joinedload(ArticleORM.topic))
+                .filter(ArticleORM.url.in_(urls))
+                .all()
+            )
             return [_to_article(orm) for orm in saved]
 
     async def update_feed_sync_time(self, feed_id: int, synced_at: datetime) -> None:
@@ -110,17 +118,22 @@ class PostgresRepository(FeedRepository):
         offset: int = 0,
     ) -> list[Article]:
         with Session(engine) as session:
-            q = session.query(ArticleORM)
+            q = session.query(ArticleORM).options(joinedload(ArticleORM.topic))
             if feed_id:
-                q = q.filter_by(feed_id=feed_id)
+                q = q.filter(ArticleORM.feed_id == feed_id)
             if topic:
-                q = q.filter_by(topic=topic)
+                q = q.join(ArticleORM.topic).filter(TopicORM.name == topic)
             rows = q.order_by(ArticleORM.fetched_at.desc()).offset(offset).limit(limit).all()
             return [_to_article(a) for a in rows]
 
     async def get_article(self, article_id: int) -> Article | None:
         with Session(engine) as session:
-            orm = session.get(ArticleORM, article_id)
+            orm = (
+                session.query(ArticleORM)
+                .options(joinedload(ArticleORM.topic))
+                .filter(ArticleORM.id == article_id)
+                .first()
+            )
             return _to_article(orm) if orm else None
 
     async def mark_as_read(self, article_id: int) -> None:
@@ -134,13 +147,24 @@ class PostgresRepository(FeedRepository):
         if not article_ids:
             return []
         with Session(engine) as session:
-            rows = session.query(ArticleORM).filter(ArticleORM.id.in_(article_ids)).all()
+            rows = (
+                session.query(ArticleORM)
+                .options(joinedload(ArticleORM.topic))
+                .filter(ArticleORM.id.in_(article_ids))
+                .all()
+            )
             return [_to_article(orm) for orm in rows]
 
     async def update_article_enrichment(self, article_id: int, topic: str, summary: str) -> None:
         with Session(engine) as session:
+            topic_orm = session.query(TopicORM).filter_by(name=topic).first()
             orm = session.get(ArticleORM, article_id)
             if orm:
-                orm.topic = topic
+                orm.topic_id = topic_orm.id if topic_orm else None
                 orm.summary = summary
                 session.commit()
+
+    async def list_topics(self) -> list[Topic]:
+        with Session(engine) as session:
+            rows = session.query(TopicORM).order_by(TopicORM.name).all()
+            return [_to_topic(t) for t in rows]

@@ -26,8 +26,9 @@ class Article(BaseModel):
 
 
 class Topic(BaseModel):
+    id: int | None = None
     name: str
-    description: str
+    description: str = ""
 
 
 class SearchResult(BaseModel):
