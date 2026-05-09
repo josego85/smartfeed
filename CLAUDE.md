@@ -164,10 +164,19 @@ OLLAMA_BASE_URL=http://localhost:11434
 - **Non-blocking sync with ARQ + Redis**: `POST /feeds/{id}/sync` enqueues an ARQ job
   and returns `202` in <10 ms. Worker runs `FeedSyncService` in a separate process
   and publishes to Redis Pub/Sub on completion.
+- **Two-phase sync pipeline**: `sync_feed_job` (fast path, < 5 s) fetches and
+  stores raw articles, fires the SSE `complete` event, then enqueues
+  `enrich_articles_job`. The enrich job (slow path, background) runs
+  classify + summarize + embed via Ollama and fires an `enriched` SSE event
+  so the frontend refetches. Enrichment failures are silent — articles
+  remain visible without topic/summary.
 - **SSE for real-time notifications**: `GET /feeds/sync-events` streams Redis Pub/Sub
   events to the browser via Server-Sent Events. `SyncMonitor` holds one `EventSource`
   per tab — zero polling. On page refresh, recovers in-progress jobs from
   `localStorage` and does a one-time HTTP status check.
+- **`asyncio.shield` in `_publish`**: the `finally` block in ARQ job functions uses
+  `asyncio.shield` to protect the Redis publish from being cancelled when ARQ's
+  `job_timeout` kills the task — ensures the SSE event always reaches the browser.
 - **Centralized config**: all tunables (`embedding_model`, `embedding_dim`, char
   limits, concurrency, pagination, timeouts) live in `Settings` (pydantic-settings)
   and are overridable via `.env`. Frontend equivalents live in `lib/constants.ts`

@@ -14,6 +14,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- `enrich_articles_job`: new ARQ background job — classify, summarize,
+  and embed articles after sync; publishes `enriched` SSE event so the
+  frontend refetches automatically without frontend changes
+- `FeedSyncService.enrich()`: isolated slow path for LLM enrichment,
+  called exclusively by `enrich_articles_job`
+- `FeedRepository.get_articles_by_ids()` and
+  `update_article_enrichment()`: new interface methods +
+  `PostgresRepository` implementations
 - FastAPI REST API: feeds CRUD, article listing with topic/feed
   filters, semantic search
 - PostgreSQL + pgvector: relational data and `Vector(768)` embeddings
@@ -27,8 +35,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
   Claude/OpenAI/OpenRouter via single env var swap
 - Typer CLI: `feeds_add`, `feeds_list`, `feeds_sync`, `search`
 - Dependency pinning with exact versions (reproducibility, fast builds)
-- `FeedSyncService`: deduplication with one bulk DB query, concurrent
-  classify+summarize per article (`asyncio.Semaphore`), bulk insert
+- `FeedSyncService`: deduplication with one bulk DB query, bulk insert
   via `ON CONFLICT DO NOTHING`
 - ARQ + Redis background job queue: `POST /feeds/{id}/sync` returns
   `202 Accepted` in <10 ms; sync runs in a separate worker process
@@ -44,6 +51,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Changed
 
+- `FeedSyncService.sync()` is now a fast path (fetch + store raw,
+  < 5 s); LLM enrichment delegated to `enrich_articles_job` — sync
+  completes and notifies the browser before any Ollama call is made
 - `cli feeds_sync` uses `FeedSyncService` — was one-by-one inline sync
 - Embedding dimension corrected 384 → 768 (`nomic-embed-text` actual)
 - `embedding_model` and `embedding_dim` moved to `Settings`
@@ -52,6 +62,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 - APScheduler (`apscheduler` dependency) — replaced by ARQ cron job
 - `FeedRepository.save_article()` — replaced by `save_articles_bulk`
+
+#### Fixed
+
+- `sync_feed_job` bare `await` in `finally` block was cancelled by
+  ARQ's `job_timeout`, silently dropping the SSE event and leaving the
+  UI stuck on "syncing" forever; replaced with `asyncio.shield` via a
+  `_publish` helper
 
 ---
 

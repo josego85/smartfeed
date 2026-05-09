@@ -1,3 +1,5 @@
+import asyncio
+
 from arq import cron
 from arq.connections import RedisSettings
 
@@ -11,28 +13,57 @@ from ..storage.vector_store import PgVectorStore
 _CHANNEL = "smartfeed:sync:events"
 
 
+async def _publish(redis, event: SyncJobEvent) -> None:
+    """Publish a sync event to Redis Pub/Sub, guarded against task cancellation."""
+    try:
+        await asyncio.shield(redis.publish(_CHANNEL, event.model_dump_json()))
+    except asyncio.CancelledError:
+        pass
+
+
 async def sync_feed_job(ctx: dict, feed_id: int) -> dict:
+    """Fast path: fetch and store raw articles, then enqueue enrichment."""
     service: FeedSyncService = ctx["sync_service"]
     result: SyncResult | None = None
     error: str | None = None
     status = "failed"
 
     try:
-        result = await service.sync(feed_id)
+        result, new_ids = await service.sync(feed_id)
         status = "complete"
+        if new_ids:
+            await ctx["redis"].enqueue_job("enrich_articles_job", feed_id, new_ids)
         return result.model_dump()
     except Exception as exc:
         error = str(exc)
         raise
     finally:
-        event = SyncJobEvent(
+        await _publish(ctx["redis"], SyncJobEvent(
             job_id=ctx["job_id"],
             feed_id=feed_id,
             status=status,
             result=result,
             error=error,
-        )
-        await ctx["redis"].publish(_CHANNEL, event.model_dump_json())
+        ))
+
+
+async def enrich_articles_job(ctx: dict, feed_id: int, article_ids: list[int]) -> None:
+    """Slow path: classify, summarize, and embed articles in the background.
+
+    Publishes an 'enriched' SSE event on completion so the frontend refetches articles.
+    Failures are silent — articles remain visible without topic/summary.
+    """
+    service: FeedSyncService = ctx["sync_service"]
+    try:
+        await service.enrich(article_ids)
+    except Exception:
+        pass
+    finally:
+        await _publish(ctx["redis"], SyncJobEvent(
+            job_id=ctx["job_id"],
+            feed_id=feed_id,
+            status="enriched",
+        ))
 
 
 async def sync_all_feeds_job(ctx: dict) -> None:
@@ -53,7 +84,7 @@ async def shutdown(ctx: dict) -> None:
 
 
 class WorkerSettings:
-    functions = [sync_feed_job, sync_all_feeds_job]
+    functions = [sync_feed_job, enrich_articles_job, sync_all_feeds_job]
     cron_jobs = [cron(sync_all_feeds_job, minute={0, 30})]
     on_startup = startup
     on_shutdown = shutdown

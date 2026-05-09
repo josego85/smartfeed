@@ -19,7 +19,11 @@ class FeedSyncService:
         self._vs = vector_store
         self._summarizer = summarizer
 
-    async def sync(self, feed_id: int) -> SyncResult:
+    async def sync(self, feed_id: int) -> tuple[SyncResult, list[int]]:
+        """Fetch and store raw articles. Fast path — no LLM calls.
+
+        Returns (result, new_article_ids). Caller should enqueue enrich() for the IDs.
+        """
         feed = await self._repo.get_feed(feed_id)
         if feed is None:
             raise ValueError(f"Feed {feed_id} not found")
@@ -30,37 +34,38 @@ class FeedSyncService:
 
         saved: list[Article] = []
         if new_articles:
-            sem = asyncio.Semaphore(settings.sync_concurrency)
-            enriched = await asyncio.gather(
-                *[self._enrich(a, sem) for a in new_articles]
-            )
-            saved = await self._repo.save_articles_bulk(list(enriched))
-            await asyncio.gather(
-                *[
-                    self._vs.add(
-                        id=str(a.id),
-                        text=f"{a.title}\n\n{a.content}",
-                        metadata={"title": a.title, "topic": a.topic, "url": a.url},
-                    )
-                    for a in saved
-                    if a.id
-                ]
-            )
+            saved = await self._repo.save_articles_bulk(new_articles)
 
         await self._repo.update_feed_sync_time(feed_id, datetime.now(timezone.utc))
 
-        return SyncResult(
+        result = SyncResult(
             feed_id=feed_id,
             fetched=len(fetched),
             new=len(saved),
             skipped=len(fetched) - len(new_articles),
         )
+        return result, [a.id for a in saved if a.id]
 
-    async def _enrich(self, article: Article, sem: asyncio.Semaphore) -> Article:
-        async with sem:
-            text = f"{article.title}\n\n{article.content}"
-            article.topic, article.summary = await asyncio.gather(
-                classify(text),
-                self._summarizer.summarize(text),
-            )
-        return article
+    async def enrich(self, article_ids: list[int]) -> None:
+        """Classify, summarize, and embed articles. Slow path — runs in a background job."""
+        articles = await self._repo.get_articles_by_ids(article_ids)
+        if not articles:
+            return
+
+        sem = asyncio.Semaphore(settings.sync_concurrency)
+
+        async def enrich_one(article: Article) -> None:
+            async with sem:
+                text = f"{article.title}\n\n{article.content}"
+                topic, summary = await asyncio.gather(
+                    classify(text),
+                    self._summarizer.summarize(text),
+                )
+                await self._repo.update_article_enrichment(article.id, topic, summary)
+                await self._vs.add(
+                    id=str(article.id),
+                    text=text,
+                    metadata={"title": article.title, "topic": topic, "url": article.url},
+                )
+
+        await asyncio.gather(*[enrich_one(a) for a in articles])
