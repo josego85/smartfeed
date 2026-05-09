@@ -20,18 +20,6 @@ class Settings(BaseSettings):
     # ── CORS ──────────────────────────────────────────────────────────────────
     cors_origins: list[str] = ["http://localhost:3000"]
 
-    # ── Topics ────────────────────────────────────────────────────────────────
-    topics: list[str] = [
-        "Artificial Intelligence & Machine Learning",
-        "Web Development & Frontend",
-        "DevOps & Infrastructure",
-        "Programming Languages & Tooling",
-        "Cybersecurity",
-        "Open Source & Linux",
-        "Hardware & Electronics",
-        "Science & Research",
-    ]
-
     # ── HTTP ──────────────────────────────────────────────────────────────────
     http_timeout: int = 30
 

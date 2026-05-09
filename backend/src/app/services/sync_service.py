@@ -52,13 +52,14 @@ class FeedSyncService:
         if not articles:
             return
 
+        topics = await self._repo.list_topics()
         sem = asyncio.Semaphore(settings.sync_concurrency)
 
         async def enrich_one(article: Article) -> None:
             async with sem:
                 text = f"{article.title}\n\n{article.content}"
                 topic, summary = await asyncio.gather(
-                    classify(text),
+                    classify(text, topics),
                     self._summarizer.summarize(text),
                 )
                 await self._repo.update_article_enrichment(article.id, topic, summary)

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..core.config import settings
 from ..storage.database import init_db
-from .routes import articles, feeds, search
+from .routes import articles, feeds, search, topics
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(feeds.router, prefix="/api/feeds", tags=["feeds"])
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(topics.router, prefix="/api/topics", tags=["topics"])
 
 
 @app.get("/health")

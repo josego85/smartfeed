@@ -150,8 +150,16 @@ OLLAMA_BASE_URL=http://localhost:11434
   available as opt-in via a single env var change.
 - **`litellm` as LLM adapter**: one interface, 100+ providers. No N provider-specific clients.
 - **PostgreSQL + pgvector**: single database for both relational data and vector embeddings — no separate vector store process, better performance, ACID guarantees. Runs via Docker (`pgvector/pgvector:pg17` image).
-- **Embeddings for classification**: topics defined as text descriptions, classified by cosine
-  similarity — no labeled training data needed. Works fully offline.
+- **Topics as DB entities**: `topics` table holds `name` + `description`; seeded
+  automatically on startup via `_migrate()`. `articles.topic_id` is a FK —
+  no string duplication, referential integrity, rename = one row.
+  `GET /api/topics` exposes them. Adding a topic requires only a DB row +
+  backend restart (no code change).
+- **Embeddings for classification**: topic descriptions come from the `topics`
+  table at runtime, injected into `classify(text, topics)` by
+  `FeedSyncService.enrich()` — classifier is decoupled from config and
+  storage. Classified by cosine similarity, no training data needed, works
+  fully offline.
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
 - **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
@@ -234,15 +242,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ## Feed Topics (default)
 
-Topics defined as plain-text descriptions used for zero-shot classification via embeddings:
+Topics are stored in the `topics` table and seeded on first startup from `_SEED_TOPICS`
+in `backend/src/app/storage/database.py`. Each topic has a `name` and a rich keyword
+`description` used for zero-shot embedding classification.
 
-- Artificial Intelligence & Machine Learning
-- Web Development & Frontend
-- DevOps & Infrastructure
-- Programming Languages & Tooling
-- Cybersecurity
-- Open Source & Linux
-- Hardware & Electronics
-- Science & Research
+Default topics: AI & ML, Web Development, DevOps, Programming Languages, Cybersecurity,
+Open Source & Linux, Hardware & Electronics, Science & Research.
 
-New topics can be added without retraining — just add the description and re-embed.
+To add a topic: insert a row in `topics` and restart the backend (clears the embedding
+cache — no code or config change needed).

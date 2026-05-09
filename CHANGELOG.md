@@ -14,6 +14,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- `topics` table (`id`, `name`, `description`) — topics are now first-class
+  DB entities; keyword descriptions seeded automatically on startup via
+  idempotent `_migrate()` in `init_db()`
+- `GET /api/topics` endpoint — returns the full topic list with descriptions
+- `FeedRepository.list_topics()` abstract method + `PostgresRepository`
+  implementation with `_to_topic()` mapper
+- `_migrate()` in `database.py` — seeds topics, adds `topic_id` FK to
+  `articles`, migrates existing string values to FK, drops legacy `topic`
+  column; safe to run on every startup (all steps idempotent)
 - `enrich_articles_job`: new ARQ background job — classify, summarize,
   and embed articles after sync; publishes `enriched` SSE event so the
   frontend refetches automatically without frontend changes
@@ -51,6 +60,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Changed
 
+- `articles.topic` (plain string) replaced by `articles.topic_id`
+  (FK → `topics.id`, nullable); API responses unchanged — topic name
+  resolved via `joinedload` on every article query
+- `classifier.classify(text, topics)` — decoupled from `Settings`; topic
+  descriptions come from the DB, not from hardcoded source; callers inject
+  the topic list (passed from `FeedSyncService.enrich()`)
+- `FeedSyncService.enrich()` loads topics from the repository once per job
+  and passes them to `classify()`
+- `update_article_enrichment()` resolves topic name → `topic_id` before
+  writing; articles without a matching topic get `topic_id = NULL`
 - `FeedSyncService.sync()` is now a fast path (fetch + store raw,
   < 5 s); LLM enrichment delegated to `enrich_articles_job` — sync
   completes and notifies the browser before any Ollama call is made
@@ -60,6 +79,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Removed
 
+- `settings.topics: list[str]` — topic names and descriptions live
+  exclusively in the database
+- Hardcoded `_TOPIC_DESCRIPTIONS` dict from `classifier.py`
 - APScheduler (`apscheduler` dependency) — replaced by ARQ cron job
 - `FeedRepository.save_article()` — replaced by `save_articles_bulk`
 
