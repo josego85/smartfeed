@@ -13,9 +13,9 @@ dependencies = [
     "psycopg2-binary==2.9.12",
     "pgvector==0.4.2",
     "litellm==1.83.14",
-    "apscheduler==3.11.2",
     "typer==0.23.1",
     "numpy==2.4.4",
+    "arq==0.26.1",
 ]
 
 [project.scripts]

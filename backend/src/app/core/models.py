@@ -8,6 +8,7 @@ class Feed(BaseModel):
     title: str = ""
     description: str = ""
     created_at: datetime = datetime.utcnow()
+    last_synced_at: datetime | None = None
 
 
 class Article(BaseModel):
@@ -34,3 +35,26 @@ class SearchResult(BaseModel):
     score: float
     document: str
     metadata: dict
+
+
+class SyncResult(BaseModel):
+    feed_id: int
+    fetched: int
+    new: int
+    skipped: int
+
+
+class SyncJobStatus(BaseModel):
+    job_id: str
+    status: str  # queued | in_progress | complete | failed | not_found
+    result: SyncResult | None = None
+    error: str | None = None
+
+
+class SyncJobEvent(BaseModel):
+    """Payload published to Redis Pub/Sub when a job reaches a terminal state."""
+    job_id: str
+    feed_id: int
+    status: str  # complete | failed
+    result: SyncResult | None = None
+    error: str | None = None

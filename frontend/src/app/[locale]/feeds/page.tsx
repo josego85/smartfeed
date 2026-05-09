@@ -8,12 +8,39 @@ import { useFeedActions } from "@/hooks/useFeedActions";
 import { feedsApi } from "@/lib/api";
 import type { Feed } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, RefreshCw, Rss, Trash2 } from "lucide-react";
+import { CheckCircle, Loader2, Plus, RefreshCw, Rss, Trash2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+const ACTIVE = new Set(["queued", "in_progress"]);
+
+function SyncButton({ feed }: { feed: Feed }) {
+  const t = useTranslations("feeds");
+  const { sync, syncJob } = useFeedActions(feed.id, feed.title || feed.url);
+
+  const isSyncing = sync.isPending || (syncJob !== undefined && ACTIVE.has(syncJob.status));
+  const isComplete = syncJob?.status === "complete";
+  const isFailed = syncJob?.status === "failed";
+
+  return (
+    <Button size="sm" variant="ghost" onClick={() => sync.mutate()} disabled={isSyncing}>
+      {isSyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+      {isComplete && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
+      {isFailed && <XCircle className="h-3.5 w-3.5 text-red-400" />}
+      {!isSyncing && !isComplete && !isFailed && <RefreshCw className="h-3.5 w-3.5" />}
+      {isSyncing
+        ? t("syncing")
+        : isComplete
+          ? t("synced")
+          : isFailed
+            ? t("syncFailed")
+            : t("sync")}
+    </Button>
+  );
+}
 
 function FeedRow({ feed }: { feed: Feed }) {
   const t = useTranslations("feeds");
-  const { sync, remove } = useFeedActions(feed.id);
+  const { remove } = useFeedActions(feed.id, feed.title || feed.url);
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -26,23 +53,17 @@ function FeedRow({ feed }: { feed: Feed }) {
           {feed.title || "Untitled feed"}
         </p>
         <p className="truncate text-xs text-slate-400">{feed.url}</p>
+        {feed.last_synced_at && (
+          <p className="text-xs text-slate-400">
+            {t("lastSynced", {
+              date: new Date(feed.last_synced_at).toLocaleString(),
+            })}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => sync.mutate()}
-          disabled={sync.isPending}
-        >
-          {sync.isPending ? (
-            <Spinner className="h-3.5 w-3.5" />
-          ) : (
-            <RefreshCw className="h-3.5 w-3.5" />
-          )}
-          {sync.isSuccess ? t("synced") : t("sync")}
-        </Button>
-
+        <SyncButton feed={feed} />
         <Button
           size="sm"
           variant="danger"
@@ -68,11 +89,7 @@ function AddFeedForm() {
         onChange={(e) => setUrl(e.target.value)}
         className="flex-1"
       />
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={!url.trim() || isPending}
-      >
+      <Button type="submit" variant="primary" disabled={!url.trim() || isPending}>
         {isPending ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         {t("add")}
       </Button>

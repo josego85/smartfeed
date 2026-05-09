@@ -1,3 +1,4 @@
+import { ARTICLES_LIMIT } from "@/lib/constants";
 import { articlesApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
@@ -8,7 +9,7 @@ export function useArticles() {
 
   const { data: articles, isLoading, error } = useQuery({
     queryKey: ["articles", topic],
-    queryFn: () => articlesApi.list({ topic, limit: 100 }),
+    queryFn: () => articlesApi.list({ topic, limit: ARTICLES_LIMIT }),
   });
 
   const unreadCount = articles?.filter((a) => !a.is_read).length ?? 0;

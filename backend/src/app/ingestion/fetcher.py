@@ -4,6 +4,7 @@ from datetime import datetime
 import feedparser
 import httpx
 
+from ..core.config import settings
 from ..core.models import Article, Feed
 
 
@@ -14,7 +15,7 @@ async def fetch_feed(feed: Feed) -> list[Article]:
         ),
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
     }
-    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=settings.http_timeout, follow_redirects=True) as client:
         response = await client.get(feed.url, headers=headers)
         response.raise_for_status()
 

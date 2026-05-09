@@ -1,14 +1,16 @@
-import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from redis import asyncio as aioredis
 
-from ...core.interfaces import FeedRepository
-from ...core.models import Feed
-from ...ingestion.fetcher import fetch_feed
-from ...ingestion.scheduler import sync_all_feeds
-from ..dependencies import get_repo, get_vector_store, get_summarizer
+from ...core.config import settings
+from ...core.interfaces import FeedRepository, JobQueue
+from ...core.models import Feed, SyncJobStatus
+from ..dependencies import get_queue, get_repo
 
 router = APIRouter()
+
+_CHANNEL = "smartfeed:sync:events"
 
 
 class FeedCreate(BaseModel):
@@ -24,8 +26,7 @@ async def list_feeds(repo: FeedRepository = Depends(get_repo)):
 
 @router.post("/", response_model=Feed, status_code=201)
 async def add_feed(body: FeedCreate, repo: FeedRepository = Depends(get_repo)):
-    feed = await repo.save_feed(Feed(url=body.url, title=body.title, description=body.description))
-    return feed
+    return await repo.save_feed(Feed(url=body.url, title=body.title, description=body.description))
 
 
 @router.delete("/{feed_id}", status_code=204)
@@ -36,35 +37,51 @@ async def delete_feed(feed_id: int, repo: FeedRepository = Depends(get_repo)):
     await repo.delete_feed(feed_id)
 
 
-@router.post("/{feed_id}/sync", status_code=202)
-async def sync_feed(
+@router.post("/{feed_id}/sync", status_code=202, response_model=SyncJobStatus)
+async def enqueue_sync(
     feed_id: int,
     repo: FeedRepository = Depends(get_repo),
-    vector_store=Depends(get_vector_store),
-    summarizer=Depends(get_summarizer),
+    queue: JobQueue = Depends(get_queue),
 ):
     feed = await repo.get_feed(feed_id)
     if not feed:
         raise HTTPException(status_code=404, detail="Feed not found")
-    try:
-        articles = await fetch_feed(feed)
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Feed returned {exc.response.status_code}: {feed.url}",
-        )
-    except httpx.RequestError as exc:
-        raise HTTPException(status_code=502, detail=f"Could not reach feed: {exc}")
-    for article in articles:
-        from ...processing.classifier import classify
-        text = f"{article.title}\n\n{article.content}"
-        article.topic = classify(text)
-        article.summary = await summarizer.summarize(text)
-        saved = await repo.save_article(article)
-        if saved.id:
-            await vector_store.add(
-                id=str(saved.id),
-                text=text,
-                metadata={"title": article.title, "topic": article.topic, "url": article.url},
-            )
-    return {"synced": len(articles)}
+    job_id = await queue.enqueue_sync(feed_id)
+    return SyncJobStatus(job_id=job_id, status="queued")
+
+
+@router.get("/{feed_id}/sync-status", response_model=SyncJobStatus)
+async def sync_status(
+    feed_id: int,
+    job_id: str,
+    queue: JobQueue = Depends(get_queue),
+):
+    return await queue.get_status(job_id)
+
+
+@router.get("/sync-events")
+async def sync_events(request: Request):
+    async def stream():
+        client = aioredis.from_url(settings.redis_url)
+        pubsub = client.pubsub()
+        await pubsub.subscribe(_CHANNEL)
+        try:
+            yield ": connected\n\n"
+            while not await request.is_disconnected():
+                msg = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=settings.pubsub_timeout
+                )
+                if msg:
+                    yield f"data: {msg['data'].decode()}\n\n"
+                else:
+                    yield ": ping\n\n"
+        finally:
+            await pubsub.unsubscribe()
+            await pubsub.aclose()
+            await client.aclose()
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

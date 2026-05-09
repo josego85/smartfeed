@@ -4,6 +4,7 @@ export interface Feed {
   title: string;
   description: string;
   created_at: string;
+  last_synced_at: string | null;
 }
 
 export interface Article {
@@ -34,4 +35,20 @@ export interface FeedCreate {
   url: string;
   title?: string;
   description?: string;
+}
+
+export interface SyncResult {
+  feed_id: number;
+  fetched: number;
+  new: number;
+  skipped: number;
+}
+
+export type SyncStatus = "queued" | "in_progress" | "complete" | "failed" | "not_found";
+
+export interface SyncJobStatus {
+  job_id: string;
+  status: SyncStatus;
+  result?: SyncResult;
+  error?: string;
 }

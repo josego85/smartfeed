@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..core.config import settings
-from .embeddings import embed, embed_batch, OLLAMA_EMBEDDING_MODEL
+from .embeddings import embed, embed_batch
 
 # Rich keyword descriptions improve zero-shot accuracy significantly.
 # The model compares article embeddings against these, not just the short label.
@@ -66,8 +66,8 @@ async def _load_topic_embeddings() -> dict[str, list[float]]:
 
 
 async def classify(text: str) -> str:
-    # Use only first 500 chars — full content dilutes the classification signal.
-    truncated = text[:500]
+    # Full content dilutes the classification signal — leading chars carry the topic.
+    truncated = text[:settings.max_classify_chars]
     article_vec = np.array(await embed(truncated))
     topic_vecs = await _load_topic_embeddings()
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ...core.config import settings
 from ...core.interfaces import FeedRepository
 from ...core.models import Article
 from ..dependencies import get_repo
@@ -11,7 +12,7 @@ router = APIRouter()
 async def list_articles(
     feed_id: int | None = Query(None),
     topic: str | None = Query(None),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(settings.articles_default_limit, ge=1, le=settings.articles_max_limit),
     offset: int = Query(0, ge=0),
     repo: FeedRepository = Depends(get_repo),
 ):
