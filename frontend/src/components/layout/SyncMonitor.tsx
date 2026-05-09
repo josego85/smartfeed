@@ -1,8 +1,8 @@
 "use client";
 
-import { SYNC_DISPLAY_MS, TERMINAL_STATUSES } from "@/lib/constants";
+import { BASE_URL, SYNC_DISPLAY_MS, TERMINAL_STATUSES } from "@/lib/constants";
 import { useSyncContext } from "@/contexts/sync";
-import { BASE_URL, feedsApi } from "@/lib/api";
+import { feedsApi } from "@/lib/api";
 import type { SyncJobStatus } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
