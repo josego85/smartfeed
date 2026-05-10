@@ -1,33 +1,55 @@
-import numpy as np
+import litellm
 
 from ..core.config import settings
+from ..core.interfaces import Classifier
 from ..core.models import Topic
-from .embeddings import embed, embed_batch
 
-_topic_embeddings: dict[str, list[float]] = {}
+_SYSTEM_PROMPT = (
+    "You are a topic classifier for a tech news aggregator. "
+    "Given an article, respond with exactly one topic name from the provided list. "
+    "Your response must be ONLY the topic name — no explanation, no punctuation, no quotes."
+)
+
+_MAX_TOKENS = 30  # enough for any topic name; prevents the LLM from generating prose
 
 
-async def classify(text: str, topics: list[Topic]) -> str:
-    global _topic_embeddings
-    truncated = text[:settings.max_classify_chars]
-    article_vec = np.array(await embed(truncated))
+class LLMClassifier(Classifier):
+    def _model_id(self) -> str:
+        if settings.llm_provider == "ollama":
+            return f"ollama/{settings.llm_model}"
+        return settings.llm_model
 
-    if not _topic_embeddings:
-        descriptions = [t.description for t in topics]
-        vectors = await embed_batch(descriptions)
-        _topic_embeddings = {t.name: vec for t, vec in zip(topics, vectors)}
+    def _api_base(self) -> str | None:
+        if settings.llm_provider == "ollama":
+            return settings.ollama_base_url
+        return None
 
-    best_topic = topics[0].name if topics else ""
-    best_score = -1.0
+    async def classify(self, text: str, topics: list[Topic]) -> str:
+        if not topics:
+            return ""
 
-    for name, vec in _topic_embeddings.items():
-        topic_vec = np.array(vec)
-        score = float(
-            np.dot(article_vec, topic_vec)
-            / (np.linalg.norm(article_vec) * np.linalg.norm(topic_vec))
+        topic_list = "\n".join(f"- {t.name}" for t in topics)
+        user_message = f"Topics:\n{topic_list}\n\nArticle:\n{text[:settings.max_classify_chars]}"
+
+        response = await litellm.acompletion(
+            model=self._model_id(),
+            api_base=self._api_base(),
+            messages=[
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": user_message},
+            ],
+            max_tokens=_MAX_TOKENS,
+            temperature=0,
         )
-        if score > best_score:
-            best_score = score
-            best_topic = name
+        result = response.choices[0].message.content.strip()
 
-    return best_topic
+        valid = {t.name for t in topics}
+        if result in valid:
+            return result
+
+        result_lower = result.lower()
+        for name in valid:
+            if name.lower() in result_lower or result_lower in name.lower():
+                return name
+
+        return ""

@@ -63,6 +63,11 @@ class Summarizer(ABC):
     async def summarize(self, text: str) -> str: ...
 
 
+class Classifier(ABC):
+    @abstractmethod
+    async def classify(self, text: str, topics: list[Topic]) -> str: ...
+
+
 class JobQueue(ABC):
     @abstractmethod
     async def enqueue_sync(self, feed_id: int) -> str: ...

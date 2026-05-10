@@ -5,6 +5,7 @@ from arq.connections import RedisSettings
 
 from ..core.config import settings
 from ..core.models import SyncJobEvent, SyncResult
+from ..processing.classifier import LLMClassifier
 from ..processing.summarizer import LiteLLMSummarizer
 from ..services.sync_service import FeedSyncService
 from ..storage.postgres_repo import PostgresRepository
@@ -76,7 +77,7 @@ async def sync_all_feeds_job(ctx: dict) -> None:
 async def startup(ctx: dict) -> None:
     repo = PostgresRepository()
     ctx["repo"] = repo
-    ctx["sync_service"] = FeedSyncService(repo, PgVectorStore(), LiteLLMSummarizer())
+    ctx["sync_service"] = FeedSyncService(repo, PgVectorStore(), LiteLLMSummarizer(), LLMClassifier())
 
 
 async def shutdown(ctx: dict) -> None:

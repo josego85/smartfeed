@@ -14,6 +14,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- `Classifier` ABC in `core/interfaces.py` — mirrors `Summarizer`;
+  enables DI and swappable implementations
+- `LLMClassifier` in `processing/classifier.py` — calls the configured
+  LLM via `litellm` with `temperature=0`; topics loaded from DB at
+  runtime (fully dynamic, no cache)
+- `storage/seeds.py` — topic seed data separated from `database.py`;
+  `database.py` now owns only schema and migrations
 - `topics` table (`id`, `name`, `description`) — topics are now first-class
   DB entities; keyword descriptions seeded automatically on startup via
   idempotent `_migrate()` in `init_db()`
@@ -37,13 +44,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
   in one DB
 - `PostgresRepository` and `PgVectorStore` implementing `core/`
   interfaces — swappable without touching business logic
-- Zero-shot topic classifier via Ollama embeddings
-  (`nomic-embed-text`) — keyword descriptions, no training data needed
 - RSS/Atom ingestion with browser `User-Agent` to avoid 403s
 - LLM summarization via `litellm` — Ollama by default,
   Claude/OpenAI/OpenRouter via single env var swap
 - Typer CLI: `feeds_add`, `feeds_list`, `feeds_sync`, `search`
-- Dependency pinning with exact versions (reproducibility, fast builds)
 - `FeedSyncService`: deduplication with one bulk DB query, bulk insert
   via `ON CONFLICT DO NOTHING`
 - ARQ + Redis background job queue: `POST /feeds/{id}/sync` returns
@@ -57,19 +61,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - All tunables in `Settings` (pydantic-settings), overridable via
   `.env`: HTTP timeout, embedding model/dim, char limits,
   concurrency, pagination, worker settings
+- Dependency pinning with exact versions (reproducibility, fast builds)
 
 #### Changed
 
+- `FeedSyncService` receives `Classifier` via constructor injection
+  (same pattern as `Summarizer`); classifier no longer imported directly
+- `max_classify_chars` raised 500 → 2000; previous value cut most
+  article content before the classifier had enough signal
+- Topic descriptions rewritten from keyword bags to natural-language
+  prose
+- `_migrate()` topics upsert changed to `ON CONFLICT DO UPDATE SET
+  description`; description changes apply on restart
+- Articles ordered by `published_at DESC NULLS LAST` instead of
+  `fetched_at`
 - `articles.topic` (plain string) replaced by `articles.topic_id`
   (FK → `topics.id`, nullable); API responses unchanged — topic name
   resolved via `joinedload` on every article query
-- `classifier.classify(text, topics)` — decoupled from `Settings`; topic
-  descriptions come from the DB, not from hardcoded source; callers inject
-  the topic list (passed from `FeedSyncService.enrich()`)
 - `FeedSyncService.enrich()` loads topics from the repository once per job
-  and passes them to `classify()`
-- `update_article_enrichment()` resolves topic name → `topic_id` before
-  writing; articles without a matching topic get `topic_id = NULL`
+  and passes them to the classifier
+- `update_article_enrichment()` resolves topic name → `topic_id`
+  before writing; articles without a matching topic get `topic_id = NULL`
 - `FeedSyncService.sync()` is now a fast path (fetch + store raw,
   < 5 s); LLM enrichment delegated to `enrich_articles_job` — sync
   completes and notifies the browser before any Ollama call is made
@@ -87,6 +99,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Fixed
 
+- `PgVectorStore.search()`: `topic` metadata serialized raw `TopicORM`
+  instead of `topic.name`; caused `PydanticSerializationError` 500 on
+  every search request (CORS error was a symptom)
 - `sync_feed_job` bare `await` in `finally` block was cancelled by
   ARQ's `job_timeout`, silently dropping the SSE event and leaving the
   UI stuck on "syncing" forever; replaced with `asyncio.shield` via a

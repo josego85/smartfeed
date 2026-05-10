@@ -155,11 +155,14 @@ OLLAMA_BASE_URL=http://localhost:11434
   no string duplication, referential integrity, rename = one row.
   `GET /api/topics` exposes them. Adding a topic requires only a DB row +
   backend restart (no code change).
-- **Embeddings for classification**: topic descriptions come from the `topics`
-  table at runtime, injected into `classify(text, topics)` by
-  `FeedSyncService.enrich()` — classifier is decoupled from config and
-  storage. Classified by cosine similarity, no training data needed, works
-  fully offline.
+- **LLM classification via `Classifier` interface**: `Classifier` ABC in
+  `core/interfaces.py` (same pattern as `Summarizer`). `LLMClassifier` in
+  `processing/classifier.py` calls the configured LLM via `litellm` with
+  `temperature=0`; topics list is always fetched from DB at runtime and
+  injected by `FeedSyncService.enrich()` — fully dynamic, no cache, no
+  code change needed to add/rename a topic.
+  Topic seed data lives in `storage/seeds.py` (separate from schema).
+  Articles are ordered by `published_at DESC NULLS LAST`.
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
 - **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
