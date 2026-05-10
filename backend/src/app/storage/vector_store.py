@@ -36,7 +36,7 @@ class PgVectorStore(VectorStore):
                     document=row.ArticleORM.title,
                     metadata={
                         "title": row.ArticleORM.title,
-                        "topic": row.ArticleORM.topic,
+                        "topic": row.ArticleORM.topic.name if row.ArticleORM.topic else "",
                         "url": row.ArticleORM.url,
                     },
                 )

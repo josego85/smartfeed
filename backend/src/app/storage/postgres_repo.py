@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy import nulls_last
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, joinedload
 
@@ -123,7 +124,7 @@ class PostgresRepository(FeedRepository):
                 q = q.filter(ArticleORM.feed_id == feed_id)
             if topic:
                 q = q.join(ArticleORM.topic).filter(TopicORM.name == topic)
-            rows = q.order_by(ArticleORM.fetched_at.desc()).offset(offset).limit(limit).all()
+            rows = q.order_by(nulls_last(ArticleORM.published_at.desc())).offset(offset).limit(limit).all()
             return [_to_article(a) for a in rows]
 
     async def get_article(self, article_id: int) -> Article | None:

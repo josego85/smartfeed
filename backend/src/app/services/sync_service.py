@@ -2,10 +2,9 @@ import asyncio
 from datetime import datetime, timezone
 
 from ..core.config import settings
-from ..core.interfaces import FeedRepository, Summarizer, VectorStore
+from ..core.interfaces import Classifier, FeedRepository, Summarizer, VectorStore
 from ..core.models import Article, SyncResult
 from ..ingestion.fetcher import fetch_feed
-from ..processing.classifier import classify
 
 
 class FeedSyncService:
@@ -14,10 +13,12 @@ class FeedSyncService:
         repo: FeedRepository,
         vector_store: VectorStore,
         summarizer: Summarizer,
+        classifier: Classifier,
     ) -> None:
         self._repo = repo
         self._vs = vector_store
         self._summarizer = summarizer
+        self._classifier = classifier
 
     async def sync(self, feed_id: int) -> tuple[SyncResult, list[int]]:
         """Fetch and store raw articles. Fast path — no LLM calls.
@@ -59,7 +60,7 @@ class FeedSyncService:
             async with sem:
                 text = f"{article.title}\n\n{article.content}"
                 topic, summary = await asyncio.gather(
-                    classify(text, topics),
+                    self._classifier.classify(text, topics),
                     self._summarizer.summarize(text),
                 )
                 await self._repo.update_article_enrichment(article.id, topic, summary)

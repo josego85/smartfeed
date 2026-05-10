@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     embedding_dim: int = 768           # must match the embedding model output
 
     # ── Processing ────────────────────────────────────────────────────────────
-    max_classify_chars: int = 500      # chars fed to the classifier; more dilutes signal
+    max_classify_chars: int = 2000     # chars fed to the classifier
     max_summarize_chars: int = 4000    # chars sent to the LLM summarizer
     sync_concurrency: int = 3          # parallel enrich tasks per sync job
 
