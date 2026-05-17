@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/layout/Sidebar";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ReactNode, Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import { routing } from "@/i18n/routing";
@@ -9,6 +9,8 @@ import "../globals.css";
 import { Providers } from "../providers";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

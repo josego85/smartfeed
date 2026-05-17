@@ -33,3 +33,11 @@ async def mark_as_read(article_id: int, repo: FeedRepository = Depends(get_repo)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     await repo.mark_as_read(article_id)
+
+
+@router.delete("/{article_id}", status_code=204)
+async def delete_article(article_id: int, repo: FeedRepository = Depends(get_repo)):
+    article = await repo.get_article(article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    await repo.delete_article(article_id)

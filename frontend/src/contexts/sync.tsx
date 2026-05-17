@@ -59,7 +59,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     (jobId: string, patch: Partial<Pick<SyncJob, "status" | "result" | "error">>) => {
       setJobs((prev) => prev.map((j) => (j.jobId === jobId ? { ...j, ...patch } : j)));
     },
-    []
+    [],
   );
 
   const removeJob = useCallback((jobId: string) => {

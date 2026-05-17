@@ -38,6 +38,9 @@ class FeedRepository(ABC):
     async def mark_as_read(self, article_id: int) -> None: ...
 
     @abstractmethod
+    async def delete_article(self, article_id: int) -> None: ...
+
+    @abstractmethod
     async def delete_feed(self, feed_id: int) -> None: ...
 
     @abstractmethod

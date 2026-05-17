@@ -7,7 +7,11 @@ export function useArticles() {
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic") ?? undefined;
 
-  const { data: articles, isLoading, error } = useQuery({
+  const {
+    data: articles,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["articles", topic],
     queryFn: () => articlesApi.list({ topic, limit: ARTICLES_LIMIT }),
   });

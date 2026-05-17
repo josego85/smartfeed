@@ -1,0 +1,21 @@
+# pnpm
+.pnpm-store/
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+
+# Env files
+.env*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store

@@ -48,7 +48,7 @@ smartfeed/
 │       ├── hooks/              # Custom React hooks (useArticles, useSearch, …)
 │       ├── i18n/               # next-intl config (routing.ts, request.ts)
 │       ├── lib/                # API client, constants, utilities
-│       ├── middleware.ts       # Locale detection + redirect
+│       ├── proxy.ts            # Locale detection + redirect (Next.js 16 convention)
 │       ├── navigation.ts       # Locale-aware Link / useRouter / usePathname
 │       └── types/              # TypeScript types (mirrored from backend schemas)
 │
@@ -130,7 +130,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | UI components | `shadcn/ui` |
 | Styling | Tailwind CSS v4 |
@@ -166,8 +166,13 @@ OLLAMA_BASE_URL=http://localhost:11434
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
 - **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
-  server-side message loading, automatic browser locale detection via middleware.
+  server-side message loading, automatic browser locale detection via `proxy.ts`.
   Switching language requires zero backend changes — purely frontend.
+- **`proxy.ts` (Next.js 16)**: Next.js 16 renamed the `middleware` file convention to `proxy`.
+  File is at `src/proxy.ts`; content uses `createMiddleware` from `next-intl/middleware` unchanged.
+- **`force-dynamic` on `[locale]/layout.tsx`**: all pages under the locale layout fetch live
+  API data — static prerendering has no value and breaks when `NODE_ENV` is not `production`.
+  A single `export const dynamic = "force-dynamic"` on the layout covers all child routes.
 - **SOLID hooks pattern**: all data-fetching and mutation logic lives in custom hooks
   (`useArticles`, `useSearch`, `useFeedActions`, `useAddFeed`). Page components are
   pure presentation — no direct API calls in render. Each component calls its own
@@ -212,7 +217,7 @@ uv run ruff check . && uv run ruff format .
 cd frontend
 pnpm install
 pnpm dev     # http://localhost:3000
-pnpm build
+pnpm build   # forces NODE_ENV=production (dev container sets development — would break build)
 pnpm test
 ```
 

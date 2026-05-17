@@ -14,8 +14,12 @@ export function SyncMonitor() {
   const jobsRef = useRef(jobs);
   const actionsRef = useRef({ updateJob, removeJob, queryClient });
 
-  useEffect(() => { jobsRef.current = jobs; }, [jobs]);
-  useEffect(() => { actionsRef.current = { updateJob, removeJob, queryClient }; });
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
+  useEffect(() => {
+    actionsRef.current = { updateJob, removeJob, queryClient };
+  });
 
   useEffect(() => {
     const settle = (payload: SyncJobStatus) => {
@@ -37,7 +41,9 @@ export function SyncMonitor() {
         try {
           const res = await feedsApi.syncStatus(job.feedId, job.jobId);
           if (TERMINAL_STATUSES.has(res.status)) settle(res);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       });
 
     // SSE: server pushes one event when the job finishes — no polling
@@ -46,7 +52,9 @@ export function SyncMonitor() {
       try {
         const payload: SyncJobStatus = JSON.parse(event.data);
         if (payload.job_id) settle(payload);
-      } catch { /* SSE ping or malformed — ignore */ }
+      } catch {
+        /* SSE ping or malformed — ignore */
+      }
     };
 
     return () => es.close();

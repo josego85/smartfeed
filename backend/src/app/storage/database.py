@@ -47,6 +47,7 @@ class ArticleORM(Base):
     published_at = Column(DateTime, nullable=True)
     fetched_at = Column(DateTime, default=datetime.utcnow)
     is_read = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
     embedding = Column(Vector(settings.embedding_dim), nullable=True)
     feed = relationship("FeedORM", back_populates="articles")
 
@@ -99,4 +100,10 @@ def _migrate() -> None:
                 END IF;
             END $$;
         """))
+        conn.commit()
+
+        conn.execute(text(
+            "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
+            " is_deleted BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
         conn.commit()

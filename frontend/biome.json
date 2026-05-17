@@ -9,13 +9,7 @@
 
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      ".next/**",
-      "node_modules/**",
-      "coverage/**",
-      "*.min.js",
-      "next-env.d.ts"
-    ]
+    "ignore": [".next/**", "node_modules/**", "coverage/**", "*.min.js", "next-env.d.ts"]
   },
 
   "formatter": {
@@ -86,7 +80,10 @@
             "strictCase": false,
             "conventions": [
               { "selector": { "kind": "function" }, "formats": ["camelCase", "PascalCase"] },
-              { "selector": { "kind": "variable" }, "formats": ["camelCase", "PascalCase", "CONSTANT_CASE"] },
+              {
+                "selector": { "kind": "variable" },
+                "formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
+              },
               { "selector": { "kind": "typeLike" }, "formats": ["PascalCase"] }
             ]
           }
@@ -139,6 +136,9 @@
         "rules": {
           "correctness": {
             "noUnusedVariables": "off"
+          },
+          "style": {
+            "useNamingConvention": "off"
           }
         }
       }

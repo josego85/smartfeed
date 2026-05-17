@@ -55,7 +55,13 @@ export const TOPIC_META: Record<string, { label: string; color: string; dot: str
 };
 
 export function getTopicMeta(topic: string) {
-  return TOPIC_META[topic] ?? { label: topic, color: "bg-gray-100 text-gray-700 border-gray-200", dot: "bg-gray-400" };
+  return (
+    TOPIC_META[topic] ?? {
+      label: topic,
+      color: "bg-gray-100 text-gray-700 border-gray-200",
+      dot: "bg-gray-400",
+    }
+  );
 }
 
 export function formatDate(dateStr: string | null, locale = "en-US"): string {
