@@ -34,6 +34,7 @@ export const articlesApi = {
   },
   get: (id: number) => request<Article>(`/api/articles/${id}`),
   markRead: (id: number) => request<void>(`/api/articles/${id}/read`, { method: "PATCH" }),
+  delete: (id: number) => request<void>(`/api/articles/${id}`, { method: "DELETE" }),
 };
 
 export const searchApi = {

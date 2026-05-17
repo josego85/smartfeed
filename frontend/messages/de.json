@@ -16,7 +16,12 @@
     "read": "Lesen",
     "empty": "Noch keine Artikel",
     "emptyHint": "Fügen Sie Quellen hinzu und synchronisieren Sie diese, um Artikel hier zu sehen.",
-    "error": "Artikel konnten nicht geladen werden. Läuft der Server?"
+    "error": "Artikel konnten nicht geladen werden. Läuft der Server?",
+    "delete": "Löschen",
+    "deleteConfirmTitle": "Artikel löschen?",
+    "deleteConfirmDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Der Artikel wird dauerhaft aus Ihrem Feed entfernt.",
+    "deleteConfirmCancel": "Abbrechen",
+    "deleteConfirmAction": "Löschen"
   },
   "feeds": {
     "title": "Quellen",

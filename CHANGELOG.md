@@ -6,6 +6,51 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 ---
 
+## [Unreleased]
+
+### Backend
+
+#### Added
+
+- `is_deleted` column (`BOOLEAN NOT NULL DEFAULT FALSE`) on `articles` table —
+  soft delete preserves the URL in `get_existing_urls`, preventing re-import
+  on next feed sync
+- `FeedRepository.delete_article()` abstract method +
+  `PostgresRepository` implementation (sets `is_deleted = True`)
+- `DELETE /api/articles/{id}` endpoint — returns `204 No Content`;
+  responds `404` if article does not exist or is already deleted
+- Idempotent `_migrate()` step adds `is_deleted` column to existing DBs
+  with `ALTER TABLE … ADD COLUMN IF NOT EXISTS`
+
+#### Changed
+
+- `list_articles()` and `get_article()` filter `is_deleted = FALSE` —
+  deleted articles are invisible to all API consumers
+- `get_existing_urls()` intentionally does **not** filter deleted articles —
+  ensures deleted URLs are never re-fetched on sync
+
+---
+
+### Frontend
+
+#### Added
+
+- `articlesApi.delete(id)` — `DELETE /api/articles/{id}`, returns `void`
+- `useDeleteArticle` hook — TanStack Query mutation; invalidates
+  `["articles"]` cache on success
+- `AlertDialog` component (`components/ui/alert-dialog.tsx`) built on
+  `@radix-ui/react-dialog` — shadcn/ui pattern, copy-owned
+- Delete action in `ArticleCard` footer — trash icon always visible,
+  `AlertDialog` confirmation prevents accidental deletes
+- `@radix-ui/react-dialog@1.1.15` dependency (exact pin for
+  reproducibility)
+- `frontend/.npmrc`: `confirm-module-purge=false` — prevents pnpm v11
+  from aborting on no-TTY environments (Docker, CI)
+- i18n keys `delete`, `deleteConfirmTitle`, `deleteConfirmDescription`,
+  `deleteConfirmCancel`, `deleteConfirmAction` in EN / ES / DE
+
+---
+
 ## [0.0.1] - 2026-05-10
 
 ---

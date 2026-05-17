@@ -1,13 +1,25 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { formatDate, getTopicMeta } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 import type { Article } from "@/types";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles, Trash2 } from "lucide-react";
 import { articlesApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
+import { useDeleteArticle } from "@/hooks/useDeleteArticle";
 
 interface ArticleCardProps {
   article: Article;
@@ -18,6 +30,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
   const locale = useLocale();
   const meta = getTopicMeta(article.topic);
   const queryClient = useQueryClient();
+  const { mutate: deleteArticle, isPending: isDeleting } = useDeleteArticle();
 
   const handleClick = async () => {
     if (!article.is_read) {
@@ -34,6 +47,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
         article.is_read
           ? "border-slate-100 bg-white"
           : "border-slate-200 bg-white shadow-sm",
+        isDeleting && "opacity-50 pointer-events-none",
       )}
     >
       {/* Unread indicator */}
@@ -72,15 +86,44 @@ export function ArticleCard({ article }: ArticleCardProps) {
       {/* Footer */}
       <div className="mt-auto flex items-center justify-between text-xs text-slate-400">
         <span>{formatDate(article.published_at ?? article.fetched_at, locale)}</span>
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleClick}
-          className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-slate-100 hover:text-slate-700"
-        >
-          {t("read")} <ExternalLink className="h-3 w-3" />
-        </a>
+
+        <div className="flex items-center gap-1">
+          {/* Delete */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                aria-label={t("delete")}
+                className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-red-50 hover:text-red-500"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
+                <AlertDialogDescription>{t("deleteConfirmDescription")}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("deleteConfirmCancel")}</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteArticle(article.id)}>
+                  {t("deleteConfirmAction")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Read */}
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleClick}
+            className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            {t("read")} <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
       </div>
     </article>
   );

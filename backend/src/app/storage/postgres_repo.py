@@ -119,7 +119,11 @@ class PostgresRepository(FeedRepository):
         offset: int = 0,
     ) -> list[Article]:
         with Session(engine) as session:
-            q = session.query(ArticleORM).options(joinedload(ArticleORM.topic))
+            q = (
+                session.query(ArticleORM)
+                .options(joinedload(ArticleORM.topic))
+                .filter(ArticleORM.is_deleted == False)  # noqa: E712
+            )
             if feed_id:
                 q = q.filter(ArticleORM.feed_id == feed_id)
             if topic:
@@ -132,7 +136,7 @@ class PostgresRepository(FeedRepository):
             orm = (
                 session.query(ArticleORM)
                 .options(joinedload(ArticleORM.topic))
-                .filter(ArticleORM.id == article_id)
+                .filter(ArticleORM.id == article_id, ArticleORM.is_deleted == False)  # noqa: E712
                 .first()
             )
             return _to_article(orm) if orm else None
@@ -142,6 +146,13 @@ class PostgresRepository(FeedRepository):
             orm = session.get(ArticleORM, article_id)
             if orm:
                 orm.is_read = True
+                session.commit()
+
+    async def delete_article(self, article_id: int) -> None:
+        with Session(engine) as session:
+            orm = session.get(ArticleORM, article_id)
+            if orm:
+                orm.is_deleted = True
                 session.commit()
 
     async def get_articles_by_ids(self, article_ids: list[int]) -> list[Article]:

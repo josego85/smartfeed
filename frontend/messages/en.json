@@ -16,7 +16,12 @@
     "read": "Read",
     "empty": "No articles yet",
     "emptyHint": "Add some feeds and sync them to see articles here.",
-    "error": "Could not load articles. Is the backend running?"
+    "error": "Could not load articles. Is the backend running?",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete article?",
+    "deleteConfirmDescription": "This action cannot be undone. The article will be permanently removed from your feed.",
+    "deleteConfirmCancel": "Cancel",
+    "deleteConfirmAction": "Delete"
   },
   "feeds": {
     "title": "Feeds",

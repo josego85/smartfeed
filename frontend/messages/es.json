@@ -16,7 +16,12 @@
     "read": "Leer",
     "empty": "Sin artículos aún",
     "emptyHint": "Añade algunas fuentes y sincronízalas para ver artículos aquí.",
-    "error": "No se pudieron cargar los artículos. ¿Está ejecutándose el servidor?"
+    "error": "No se pudieron cargar los artículos. ¿Está ejecutándose el servidor?",
+    "delete": "Eliminar",
+    "deleteConfirmTitle": "¿Eliminar artículo?",
+    "deleteConfirmDescription": "Esta acción no se puede deshacer. El artículo se eliminará permanentemente de tu feed.",
+    "deleteConfirmCancel": "Cancelar",
+    "deleteConfirmAction": "Eliminar"
   },
   "feeds": {
     "title": "Fuentes",
