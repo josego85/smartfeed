@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: smartfeed_test
+      POSTGRES_USER: smartfeed
+      POSTGRES_PASSWORD: smartfeed
+    ports:
+      - "5433:5432"   # offset from dev port so both can run simultaneously
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartfeed -d smartfeed_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
