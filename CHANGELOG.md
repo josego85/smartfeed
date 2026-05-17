@@ -12,6 +12,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- Three-tier test pyramid: **unit** (all I/O mocked), **integration** (FastAPI
+  `TestClient` + `dependency_overrides`), **e2e** (real PostgreSQL)
+- 193 tests; unit + integration run in < 1 s with no external services
+- `tests/unit/` — covers `core/models`, `core/config`, `ingestion/fetcher`,
+  `processing/classifier`, `processing/summarizer`, `processing/embeddings`,
+  `services/sync_service`; `respx` mocks all `httpx` calls, `AsyncMock` mocks
+  `litellm.acompletion`
+- `tests/integration/api/` — `test_feeds`, `test_articles`, `test_search`,
+  `test_topics`, `test_health`; no Docker, no real DB
+- `tests/e2e/storage/test_repository.py` — `FeedRepository` contract tests
+  against a real `pgvector` DB; fixture typed as `FeedRepository` (DIP), not
+  `PostgresRepository`, so any future adapter replacement requires zero test changes
+- `backend/docker-compose.test.yml` — isolated `pgvector/pgvector:pg17` on
+  port **5433** (offset from dev) so both stacks run simultaneously;
+  `TEST_DATABASE_URL` env var overrides the URL for CI
+- `pytest-cov`, `pytest-mock`, `respx` added to `[dependency-groups] dev`
+- `pytest.ini_options`: `addopts = "--tb=short -q"`, `e2e` marker excluded by
+  default (`-m 'not e2e'`) so CI never requires Docker
 - `FetchResult` dataclass in `ingestion/fetcher.py` — wraps feed-level `title` and
   `description` alongside the article list; `fetch_feed` return type changed from
   `list[Article]` to `FetchResult` (covers both RSS `description` and Atom `subtitle`)

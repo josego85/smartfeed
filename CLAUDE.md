@@ -124,7 +124,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 | REST API | `FastAPI` + `uvicorn` |
 | Job queue | `arq` + Redis — non-blocking sync, cron auto-sync |
 | CLI | `Typer` |
-| Testing | `pytest` + `pytest-asyncio` |
+| Testing | `pytest` + `pytest-asyncio` + `respx` + `pytest-cov` |
 
 ### Frontend
 
@@ -139,6 +139,46 @@ OLLAMA_BASE_URL=http://localhost:11434
 | Data fetching | `TanStack Query` (React Query) |
 | HTTP client | `ky` or native `fetch` |
 | Testing | `Vitest` + `Testing Library` |
+
+## Testing Strategy
+
+Three-tier pyramid. `e2e` marker is excluded from the default `addopts` — CI runs
+unit + integration without Docker; e2e are opt-in.
+
+```text
+tests/
+├── conftest.py                      # shared fixtures (Feed, Article, Topic)
+├── unit/                            # no I/O — all external calls mocked
+│   ├── core/test_models.py          # Pydantic domain model contracts
+│   ├── core/test_config.py          # Settings / env overrides
+│   ├── ingestion/test_fetcher.py    # RSS/Atom parser (httpx via respx)
+│   ├── processing/test_classifier.py
+│   ├── processing/test_summarizer.py
+│   ├── processing/test_embeddings.py
+│   └── services/test_sync_service.py
+├── integration/api/                 # FastAPI TestClient + dependency_overrides
+│   ├── test_feeds.py
+│   ├── test_articles.py
+│   ├── test_search.py
+│   ├── test_topics.py
+│   └── test_health.py
+└── e2e/storage/                     # real PostgreSQL — docker-compose.test.yml
+    └── test_repository.py           # typed against FeedRepository (interface, not impl)
+```
+
+### Key testing decisions
+
+- **`test_repository.py` typed as `FeedRepository`** (DIP): contract tests verify
+  the interface, not the concrete class. Swapping `PostgresRepository` for another
+  adapter requires zero test changes.
+- **`e2e/conftest.py` patches both `database.engine` and `postgres_repo.engine`**:
+  `postgres_repo.py` imports `engine` by value at module load time; patching only
+  `database.engine` would leave the repo using the prod engine.
+- **`_clean_tables` truncates `feeds CASCADE`** between e2e tests — cascades to
+  articles, leaves seeded `topics` intact.
+- **`docker-compose.test.yml`** runs postgres on port **5433** (offset from dev 5432)
+  so both stacks can run simultaneously.
+- **`TEST_DATABASE_URL` env var** overrides the default test DB URL for CI pipelines.
 
 ## Key Design Decisions
 
@@ -216,8 +256,18 @@ cd backend
 uv sync
 uv run uvicorn app.api.main:app --reload   # http://localhost:8000
 uv run arq app.jobs.worker.WorkerSettings  # ARQ worker (separate terminal)
-uv run pytest
+uv run pytest                              # unit + integration (no Docker needed)
+uv run pytest --cov=app --cov-report=html  # with coverage report
 uv run ruff check . && uv run ruff format .
+```
+
+### Backend e2e tests (require Docker)
+
+```bash
+cd backend
+docker compose -f docker-compose.test.yml up -d   # starts postgres on port 5433
+uv run pytest -m e2e -v                           # contract tests against real DB
+docker compose -f docker-compose.test.yml down -v
 ```
 
 ### Frontend commands
