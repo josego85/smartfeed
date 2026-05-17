@@ -15,20 +15,19 @@ export const feedsApi = {
   list: () => request<Feed[]>("/api/feeds/"),
   add: (body: FeedCreate) =>
     request<Feed>("/api/feeds/", { method: "POST", body: JSON.stringify(body) }),
-  sync: (feedId: number) =>
-    request<SyncJobStatus>(`/api/feeds/${feedId}/sync`, { method: "POST" }),
+  sync: (feedId: number) => request<SyncJobStatus>(`/api/feeds/${feedId}/sync`, { method: "POST" }),
   syncStatus: (feedId: number, jobId: string) =>
     request<SyncJobStatus>(`/api/feeds/${feedId}/sync-status?job_id=${encodeURIComponent(jobId)}`),
-  delete: (feedId: number) =>
-    request<void>(`/api/feeds/${feedId}`, { method: "DELETE" }),
+  delete: (feedId: number) => request<void>(`/api/feeds/${feedId}`, { method: "DELETE" }),
 };
 
 export const articlesApi = {
+  // biome-ignore lint/style/useNamingConvention: feed_id matches backend query param name
   list: (params?: { feed_id?: number; topic?: string; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams(
       Object.entries(params ?? {})
         .filter(([, v]) => v !== undefined)
-        .map(([k, v]) => [k, String(v)])
+        .map(([k, v]) => [k, String(v)]),
     ).toString();
     return request<Article[]>(`/api/articles/${qs ? `?${qs}` : ""}`);
   },

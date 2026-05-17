@@ -27,13 +27,7 @@ function SyncButton({ feed }: { feed: Feed }) {
       {isComplete && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
       {isFailed && <XCircle className="h-3.5 w-3.5 text-red-400" />}
       {!isSyncing && !isComplete && !isFailed && <RefreshCw className="h-3.5 w-3.5" />}
-      {isSyncing
-        ? t("syncing")
-        : isComplete
-          ? t("synced")
-          : isFailed
-            ? t("syncFailed")
-            : t("sync")}
+      {isSyncing ? t("syncing") : isComplete ? t("synced") : isFailed ? t("syncFailed") : t("sync")}
     </Button>
   );
 }
@@ -99,7 +93,11 @@ function AddFeedForm() {
 
 export default function FeedsPage() {
   const t = useTranslations("feeds");
-  const { data: feeds, isLoading, error } = useQuery({
+  const {
+    data: feeds,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["feeds"],
     queryFn: feedsApi.list,
   });

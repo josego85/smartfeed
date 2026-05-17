@@ -16,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: false, // no refetch al hacer click en la ventana
           },
         },
-      })
+      }),
   );
   return (
     <QueryClientProvider client={queryClient}>

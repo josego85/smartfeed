@@ -49,6 +49,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - i18n keys `delete`, `deleteConfirmTitle`, `deleteConfirmDescription`,
   `deleteConfirmCancel`, `deleteConfirmAction` in EN / ES / DE
 
+#### Fixed
+
+- Production build crashes with `useContext` error when `NODE_ENV=development` is inherited
+  from the dev container — `NODE_ENV=production` now forced in `package.json` build script
+  and `Dockerfile` builder stage
+- `middleware.ts` → `proxy.ts`: Next.js 16 deprecates the `middleware` file convention
+- `[locale]` layout marked `export const dynamic = "force-dynamic"` — pages that fetch
+  live API data must not be statically prerendered
+- `LanguageSwitcher` `<button>` missing `type="button"` — could accidentally submit a parent form
+- Biome lint: `useNamingConvention` disabled for `src/types/**` — snake_case mirrors the
+  backend JSON contract
+
+---
+
+### Infrastructure
+
+#### Added
+
+- `frontend/.gitignore` and `frontend/.dockerignore` — exclude `.pnpm-store/` (320 MB),
+  `node_modules/`, and `.next/` from git tracking and Docker build context
+
 ---
 
 ## [0.0.1] - 2026-05-10

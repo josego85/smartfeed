@@ -34,9 +34,7 @@ function SyncJobRow({ job }: { job: SyncJob }) {
             {t("syncResultNew", { count: job.result.new })}
           </p>
         )}
-        {isFailed && (
-          <p className="text-[10px] text-red-400">{t("syncFailed")}</p>
-        )}
+        {isFailed && <p className="text-[10px] text-red-400">{t("syncFailed")}</p>}
       </div>
     </div>
   );

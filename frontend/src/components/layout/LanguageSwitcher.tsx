@@ -25,6 +25,7 @@ export function LanguageSwitcher() {
         const isActive = lang.code === locale;
         return (
           <button
+            type="button"
             key={lang.code}
             onClick={() => switchLocale(lang.code)}
             title={lang.label}

@@ -44,9 +44,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       className={cn(
         "group relative flex flex-col gap-3 rounded-xl border p-5 transition-all duration-200",
         "hover:shadow-md hover:-translate-y-0.5",
-        article.is_read
-          ? "border-slate-100 bg-white"
-          : "border-slate-200 bg-white shadow-sm",
+        article.is_read ? "border-slate-100 bg-white" : "border-slate-200 bg-white shadow-sm",
         isDeleting && "opacity-50 pointer-events-none",
       )}
     >
