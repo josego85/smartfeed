@@ -60,7 +60,7 @@ smartfeed/
 The `src/app/` layout follows the PyPA standard — prevents accidental imports from the project
 root during testing.
 
-The `core/` layer defines abstract interfaces (`FeedRepository`, `VectorStore`, `Summarizer`).
+The `core/` layer defines abstract interfaces (`FeedRepository`, `VectorStore`, `Summarizer`, `Classifier`).
 All other layers depend inward — storage and processing implement those interfaces.
 API and CLI depend only on `core/` abstractions.
 
@@ -197,6 +197,15 @@ OLLAMA_BASE_URL=http://localhost:11434
   limits, concurrency, pagination, timeouts) live in `Settings` (pydantic-settings)
   and are overridable via `.env`. Frontend equivalents live in `lib/constants.ts`
   with `NEXT_PUBLIC_*` env var support.
+- **Feed title/description auto-populated on first sync**: `fetch_feed` returns a
+  `FetchResult` dataclass (`title`, `description`, `articles`) instead of a bare
+  `list[Article]`. `FeedSyncService.sync()` calls `FeedRepository.update_feed_metadata()`
+  after the first successful fetch — idempotent: only writes when the field is empty,
+  preserving future manual edits.
+- **`ca-certificates` in backend Dockerfile**: `python:3.12-slim` ships without system
+  CA certificates; `httpx`/`anyio` TLS handshake fails silently with `ConnectError`
+  for all HTTPS feeds. `backend/Dockerfile` installs `ca-certificates` via
+  `apt-get install --no-install-recommends ca-certificates`.
 
 ## Development Commands
 
