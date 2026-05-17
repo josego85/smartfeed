@@ -1,4 +1,5 @@
 import time
+from dataclasses import dataclass, field
 from datetime import datetime
 
 import feedparser
@@ -8,7 +9,14 @@ from ..core.config import settings
 from ..core.models import Article, Feed
 
 
-async def fetch_feed(feed: Feed) -> list[Article]:
+@dataclass
+class FetchResult:
+    title: str
+    description: str
+    articles: list[Article] = field(default_factory=list)
+
+
+async def fetch_feed(feed: Feed) -> FetchResult:
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
@@ -20,6 +28,12 @@ async def fetch_feed(feed: Feed) -> list[Article]:
         response.raise_for_status()
 
     parsed = feedparser.parse(response.text)
+    title = getattr(parsed.feed, "title", "") or ""
+    description = (
+        getattr(parsed.feed, "description", "")
+        or getattr(parsed.feed, "subtitle", "")
+        or ""
+    )
     articles = []
 
     for entry in parsed.entries:
@@ -38,7 +52,7 @@ async def fetch_feed(feed: Feed) -> list[Article]:
             )
         )
 
-    return articles
+    return FetchResult(title=title, description=description, articles=articles)
 
 
 def _parse_date(entry) -> datetime | None:

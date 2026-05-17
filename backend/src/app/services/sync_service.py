@@ -30,8 +30,10 @@ class FeedSyncService:
             raise ValueError(f"Feed {feed_id} not found")
 
         fetched = await fetch_feed(feed)
+        if not feed.title and fetched.title:
+            await self._repo.update_feed_metadata(feed_id, fetched.title, fetched.description)
         existing = await self._repo.get_existing_urls(feed_id)
-        new_articles = [a for a in fetched if a.url not in existing]
+        new_articles = [a for a in fetched.articles if a.url not in existing]
 
         saved: list[Article] = []
         if new_articles:
@@ -41,9 +43,9 @@ class FeedSyncService:
 
         result = SyncResult(
             feed_id=feed_id,
-            fetched=len(fetched),
+            fetched=len(fetched.articles),
             new=len(saved),
-            skipped=len(fetched) - len(new_articles),
+            skipped=len(fetched.articles) - len(new_articles),
         )
         return result, [a.id for a in saved if a.id]
 
