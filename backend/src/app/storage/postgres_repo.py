@@ -111,6 +111,16 @@ class PostgresRepository(FeedRepository):
                 orm.last_synced_at = synced_at
                 session.commit()
 
+    async def update_feed_metadata(self, feed_id: int, title: str, description: str) -> None:
+        with Session(engine) as session:
+            orm = session.get(FeedORM, feed_id)
+            if orm:
+                if not orm.title and title:
+                    orm.title = title
+                if not orm.description and description:
+                    orm.description = description
+                session.commit()
+
     async def list_articles(
         self,
         feed_id: int | None = None,

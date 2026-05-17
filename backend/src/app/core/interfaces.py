@@ -23,6 +23,9 @@ class FeedRepository(ABC):
     async def update_feed_sync_time(self, feed_id: int, synced_at: datetime) -> None: ...
 
     @abstractmethod
+    async def update_feed_metadata(self, feed_id: int, title: str, description: str) -> None: ...
+
+    @abstractmethod
     async def list_articles(
         self,
         feed_id: int | None = None,
