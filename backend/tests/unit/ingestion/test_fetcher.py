@@ -1,4 +1,5 @@
 """Unit tests for the RSS/Atom feed fetcher (httpx mocked via respx)."""
+
 import time
 
 import httpx

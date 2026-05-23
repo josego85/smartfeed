@@ -1,4 +1,5 @@
 """Root conftest — shared fixtures available to every test layer."""
+
 from datetime import datetime
 
 import pytest

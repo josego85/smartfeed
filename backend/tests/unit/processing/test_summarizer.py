@@ -1,4 +1,5 @@
 """Unit tests for LiteLLMSummarizer (litellm mocked)."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -66,13 +67,17 @@ class TestSummarize:
 
 class TestModelId:
     def test_ollama_prefix(self, summarizer):
-        with patch.object(settings, "llm_provider", "ollama"), \
-             patch.object(settings, "llm_model", "mistral"):
+        with (
+            patch.object(settings, "llm_provider", "ollama"),
+            patch.object(settings, "llm_model", "mistral"),
+        ):
             assert summarizer._model_id() == "ollama/mistral"
 
     def test_cloud_no_prefix(self, summarizer):
-        with patch.object(settings, "llm_provider", "openai"), \
-             patch.object(settings, "llm_model", "gpt-4o-mini"):
+        with (
+            patch.object(settings, "llm_provider", "openai"),
+            patch.object(settings, "llm_model", "gpt-4o-mini"),
+        ):
             assert summarizer._model_id() == "gpt-4o-mini"
 
     def test_ollama_api_base_is_set(self, summarizer):

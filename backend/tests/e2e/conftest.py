@@ -6,6 +6,7 @@ How to run:
     uv run pytest -m e2e
     docker compose -f docker-compose.test.yml down -v
 """
+
 import os
 
 import pytest
@@ -39,8 +40,7 @@ def test_engine():
             pass
     except OperationalError:
         pytest.skip(
-            "Test DB unavailable — start it with: "
-            "docker compose -f docker-compose.test.yml up -d"
+            "Test DB unavailable — start it with: docker compose -f docker-compose.test.yml up -d"
         )
 
     import app.storage.database as db_mod

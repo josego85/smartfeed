@@ -1,4 +1,5 @@
 """Integration tests for /api/feeds endpoints."""
+
 from app.core.models import Feed, SyncJobStatus, SyncResult
 
 

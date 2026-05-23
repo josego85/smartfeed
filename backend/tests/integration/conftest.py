@@ -1,4 +1,5 @@
 """Integration test fixtures — FastAPI TestClient with all I/O dependencies mocked."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -42,8 +43,10 @@ def client(mock_repo, mock_vector_store, mock_queue) -> TestClient:
     fake_pool = MagicMock()
     fake_pool.aclose = AsyncMock()
 
-    with patch("app.api.main.init_db"), \
-         patch("app.api.main.create_pool", new=AsyncMock(return_value=fake_pool)):
+    with (
+        patch("app.api.main.init_db"),
+        patch("app.api.main.create_pool", new=AsyncMock(return_value=fake_pool)),
+    ):
         with TestClient(app) as test_client:
             yield test_client
 

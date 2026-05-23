@@ -27,7 +27,7 @@ class LiteLLMSummarizer(Summarizer):
             api_base=self._api_base(),
             messages=[
                 {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": text[:settings.max_summarize_chars]},
+                {"role": "user", "content": text[: settings.max_summarize_chars]},
             ],
         )
         return response.choices[0].message.content.strip()

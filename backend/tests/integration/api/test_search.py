@@ -1,4 +1,5 @@
 """Integration tests for /api/search endpoint."""
+
 from app.core.config import settings
 from app.core.models import SearchResult
 
@@ -29,7 +30,9 @@ class TestSemanticSearch:
     def test_result_shape(self, client, mock_vector_store):
         mock_vector_store.search.return_value = [
             SearchResult(
-                article_id="2", score=0.8, document="Doc",
+                article_id="2",
+                score=0.8,
+                document="Doc",
                 metadata={"title": "T", "url": "https://a.com/2"},
             )
         ]

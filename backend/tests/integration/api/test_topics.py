@@ -1,4 +1,5 @@
 """Integration tests for /api/topics endpoint."""
+
 from app.core.models import Topic
 
 

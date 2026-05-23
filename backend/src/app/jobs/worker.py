@@ -39,13 +39,16 @@ async def sync_feed_job(ctx: dict, feed_id: int) -> dict:
         error = str(exc)
         raise
     finally:
-        await _publish(ctx["redis"], SyncJobEvent(
-            job_id=ctx["job_id"],
-            feed_id=feed_id,
-            status=status,
-            result=result,
-            error=error,
-        ))
+        await _publish(
+            ctx["redis"],
+            SyncJobEvent(
+                job_id=ctx["job_id"],
+                feed_id=feed_id,
+                status=status,
+                result=result,
+                error=error,
+            ),
+        )
 
 
 async def enrich_articles_job(ctx: dict, feed_id: int, article_ids: list[int]) -> None:
@@ -60,11 +63,14 @@ async def enrich_articles_job(ctx: dict, feed_id: int, article_ids: list[int]) -
     except Exception:
         pass
     finally:
-        await _publish(ctx["redis"], SyncJobEvent(
-            job_id=ctx["job_id"],
-            feed_id=feed_id,
-            status="enriched",
-        ))
+        await _publish(
+            ctx["redis"],
+            SyncJobEvent(
+                job_id=ctx["job_id"],
+                feed_id=feed_id,
+                status="enriched",
+            ),
+        )
 
 
 async def sync_all_feeds_job(ctx: dict) -> None:

@@ -29,7 +29,7 @@ class LLMClassifier(Classifier):
             return ""
 
         topic_list = "\n".join(f"- {t.name}" for t in topics)
-        user_message = f"Topics:\n{topic_list}\n\nArticle:\n{text[:settings.max_classify_chars]}"
+        user_message = f"Topics:\n{topic_list}\n\nArticle:\n{text[: settings.max_classify_chars]}"
 
         response = await litellm.acompletion(
             model=self._model_id(),

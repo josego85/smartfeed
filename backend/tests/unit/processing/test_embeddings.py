@@ -1,4 +1,5 @@
 """Unit tests for embed / embed_batch (Ollama HTTP mocked via respx)."""
+
 import json
 
 import httpx

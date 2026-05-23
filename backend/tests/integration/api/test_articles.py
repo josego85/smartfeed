@@ -1,4 +1,5 @@
 """Integration tests for /api/articles endpoints."""
+
 from app.core.models import Article
 
 
@@ -29,9 +30,7 @@ class TestListArticles:
     def test_filters_by_feed_id(self, client, mock_repo):
         mock_repo.list_articles.return_value = []
         client.get("/api/articles/?feed_id=5")
-        mock_repo.list_articles.assert_called_once_with(
-            feed_id=5, topic=None, limit=50, offset=0
-        )
+        mock_repo.list_articles.assert_called_once_with(feed_id=5, topic=None, limit=50, offset=0)
 
     def test_filters_by_topic(self, client, mock_repo):
         mock_repo.list_articles.return_value = []

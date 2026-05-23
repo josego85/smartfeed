@@ -55,6 +55,7 @@ class SyncJobStatus(BaseModel):
 
 class SyncJobEvent(BaseModel):
     """Payload published to Redis Pub/Sub when a job reaches a terminal state."""
+
     job_id: str
     feed_id: int
     status: str  # complete | failed

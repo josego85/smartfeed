@@ -18,9 +18,7 @@ class FetchResult:
 
 async def fetch_feed(feed: Feed) -> FetchResult:
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
-        ),
+        "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"),
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
     }
     async with httpx.AsyncClient(timeout=settings.http_timeout, follow_redirects=True) as client:
@@ -30,18 +28,12 @@ async def fetch_feed(feed: Feed) -> FetchResult:
     parsed = feedparser.parse(response.text)
     title = getattr(parsed.feed, "title", "") or ""
     description = (
-        getattr(parsed.feed, "description", "")
-        or getattr(parsed.feed, "subtitle", "")
-        or ""
+        getattr(parsed.feed, "description", "") or getattr(parsed.feed, "subtitle", "") or ""
     )
     articles = []
 
     for entry in parsed.entries:
-        content = (
-            entry.get("summary")
-            or (entry.get("content") or [{}])[0].get("value")
-            or ""
-        )
+        content = entry.get("summary") or (entry.get("content") or [{}])[0].get("value") or ""
         articles.append(
             Article(
                 feed_id=feed.id,

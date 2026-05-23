@@ -43,9 +43,7 @@ def feeds_sync():
                 continue
             typer.echo(f"Syncing {feed.title or feed.url}...")
             result = await service.sync(feed.id)
-            typer.echo(
-                f"  fetched={result.fetched}  new={result.new}  skipped={result.skipped}"
-            )
+            typer.echo(f"  fetched={result.fetched}  new={result.new}  skipped={result.skipped}")
 
     asyncio.run(run())
 
