@@ -1,6 +1,6 @@
-import { useSyncContext, useFeedSyncJob } from "@/contexts/sync";
-import { feedsApi } from "@/lib/api";
+import { useFeedSyncJob, useSyncContext } from "@/contexts/sync";
 import type { SyncJob } from "@/contexts/sync";
+import { feedsApi } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useFeedActions(feedId: number, feedTitle: string) {

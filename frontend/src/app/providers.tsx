@@ -1,7 +1,7 @@
 "use client";
 
-import { SyncProvider } from "@/contexts/sync";
 import { SyncMonitor } from "@/components/layout/SyncMonitor";
+import { SyncProvider } from "@/contexts/sync";
 import { QUERY_STALE_MS } from "@/lib/constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";

@@ -1,5 +1,5 @@
-import { ARTICLES_LIMIT } from "@/lib/constants";
 import { articlesApi } from "@/lib/api";
+import { ARTICLES_LIMIT } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 

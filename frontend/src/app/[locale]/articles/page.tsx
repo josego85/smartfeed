@@ -4,8 +4,8 @@ import { ArticleCard } from "@/components/articles/ArticleCard";
 import { PageSpinner } from "@/components/ui/spinner";
 import { useArticles } from "@/hooks/useArticles";
 import { getTopicMeta } from "@/lib/topics";
-import { Suspense } from "react";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 
 function ArticlesContent() {
   const t = useTranslations("articles");

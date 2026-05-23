@@ -32,7 +32,7 @@ export const TOPIC_META: Record<string, { label: string; color: string; dot: str
     color: "bg-green-100 text-green-700 border-green-200",
     dot: "bg-green-500",
   },
-  "Cybersecurity": {
+  Cybersecurity: {
     label: "Security",
     color: "bg-red-100 text-red-700 border-red-200",
     dot: "bg-red-500",
