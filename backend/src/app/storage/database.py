@@ -40,6 +40,8 @@ class FeedORM(Base):
     description = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
     last_synced_at = Column(DateTime, nullable=True)
+    status = Column(String(20), nullable=False, default="active")
+    last_error = Column(Text, nullable=True)
     articles = relationship("ArticleORM", back_populates="feed", cascade="all, delete-orphan")
 
 
@@ -121,5 +123,16 @@ def _migrate() -> None:
                 "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
                 " is_deleted BOOLEAN NOT NULL DEFAULT FALSE"
             )
+        )
+        conn.commit()
+
+        conn.execute(
+            text(
+                "ALTER TABLE feeds ADD COLUMN IF NOT EXISTS"
+                " status VARCHAR(20) NOT NULL DEFAULT 'active'"
+            )
+        )
+        conn.execute(
+            text("ALTER TABLE feeds ADD COLUMN IF NOT EXISTS last_error TEXT")
         )
         conn.commit()

@@ -7,7 +7,7 @@ export function useAddFeed() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => feedsApi.add({ url }),
+    mutationFn: (normalizedUrl: string) => feedsApi.add({ url: normalizedUrl }),
     onSuccess: () => {
       setUrl("");
       queryClient.invalidateQueries({ queryKey: ["feeds"] });
@@ -16,7 +16,11 @@ export function useAddFeed() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (url.trim()) mutation.mutate();
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    setUrl(normalized);
+    mutation.mutate(normalized);
   };
 
   return { url, setUrl, handleSubmit, isPending: mutation.isPending };

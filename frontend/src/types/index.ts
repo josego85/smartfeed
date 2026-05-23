@@ -1,3 +1,5 @@
+export type FeedStatus = "active" | "forbidden" | "not_found" | "unreachable";
+
 export interface Feed {
   id: number;
   url: string;
@@ -5,6 +7,8 @@ export interface Feed {
   description: string;
   created_at: string;
   last_synced_at: string | null;
+  status: FeedStatus;
+  last_error: string | null;
 }
 
 export interface Article {

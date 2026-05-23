@@ -36,7 +36,10 @@
     "syncActivity": "Sincronizando",
     "lastSynced": "Última sync: {date}",
     "empty": "Sin fuentes aún. Añade una arriba para empezar.",
-    "error": "No se pudieron cargar las fuentes. ¿Está ejecutándose el servidor?"
+    "error": "No se pudieron cargar las fuentes. ¿Está ejecutándose el servidor?",
+    "statusForbidden": "Bloqueada",
+    "statusNotFound": "No encontrada",
+    "statusUnreachable": "Sin acceso"
   },
   "search": {
     "title": "Búsqueda Semántica",

@@ -1,17 +1,27 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageSpinner, Spinner } from "@/components/ui/spinner";
 import { useAddFeed } from "@/hooks/useAddFeed";
 import { useFeedActions } from "@/hooks/useFeedActions";
 import { feedsApi } from "@/lib/api";
-import type { Feed } from "@/types";
+import type { Feed, FeedStatus } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle, Loader2, Plus, RefreshCw, Rss, Trash2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const ACTIVE = new Set(["queued", "in_progress"]);
+
+const STATUS_BADGE: Record<
+  Exclude<FeedStatus, "active">,
+  { labelKey: "statusForbidden" | "statusNotFound" | "statusUnreachable"; className: string }
+> = {
+  forbidden: { labelKey: "statusForbidden", className: "border-red-200 bg-red-50 text-red-600" },
+  not_found: { labelKey: "statusNotFound", className: "border-orange-200 bg-orange-50 text-orange-600" },
+  unreachable: { labelKey: "statusUnreachable", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+};
 
 function SyncButton({ feed }: { feed: Feed }) {
   const t = useTranslations("feeds");
@@ -20,9 +30,16 @@ function SyncButton({ feed }: { feed: Feed }) {
   const isSyncing = sync.isPending || (syncJob !== undefined && ACTIVE.has(syncJob.status));
   const isComplete = syncJob?.status === "complete";
   const isFailed = syncJob?.status === "failed";
+  const errorTitle = isFailed && syncJob?.error ? syncJob.error : undefined;
 
   return (
-    <Button size="sm" variant="ghost" onClick={() => sync.mutate()} disabled={isSyncing}>
+    <Button
+      size="sm"
+      variant="ghost"
+      onClick={() => sync.mutate()}
+      disabled={isSyncing}
+      title={errorTitle}
+    >
       {isSyncing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
       {isComplete && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
       {isFailed && <XCircle className="h-3.5 w-3.5 text-red-400" />}
@@ -43,9 +60,19 @@ function FeedRow({ feed }: { feed: Feed }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-900">
-          {feed.title || "Untitled feed"}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-semibold text-slate-900">
+            {feed.title || "Untitled feed"}
+          </p>
+          {feed.status !== "active" && STATUS_BADGE[feed.status] && (
+            <Badge
+              className={STATUS_BADGE[feed.status].className}
+              title={feed.last_error ?? undefined}
+            >
+              {t(STATUS_BADGE[feed.status].labelKey)}
+            </Badge>
+          )}
+        </div>
         <p className="truncate text-xs text-slate-400">{feed.url}</p>
         {feed.last_synced_at && (
           <p className="text-xs text-slate-400">

@@ -1,6 +1,14 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel
+
+
+class FeedStatus(str, Enum):
+    ACTIVE = "active"
+    FORBIDDEN = "forbidden"      # 403 — feed blocks automated access
+    NOT_FOUND = "not_found"      # 404 / 410 — feed URL no longer exists
+    UNREACHABLE = "unreachable"  # 5xx / timeout / network error
 
 
 class Feed(BaseModel):
@@ -10,6 +18,8 @@ class Feed(BaseModel):
     description: str = ""
     created_at: datetime = datetime.utcnow()
     last_synced_at: datetime | None = None
+    status: FeedStatus = FeedStatus.ACTIVE
+    last_error: str | None = None
 
 
 class Article(BaseModel):

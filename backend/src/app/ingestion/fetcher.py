@@ -8,6 +8,27 @@ import httpx
 from ..core.config import settings
 from ..core.models import Article, Feed
 
+# HTTP status codes that indicate permanent rejection (no point retrying)
+_PERMANENT_CODES = {403, 404, 410, 451}
+
+
+class FetchError(Exception):
+    pass
+
+
+class PermanentFetchError(FetchError):
+    """Non-retryable: server explicitly rejects the request (403, 404, 410, 451)."""
+
+    def __init__(self, message: str, http_status: int) -> None:
+        super().__init__(message)
+        self.http_status = http_status
+
+
+class TransientFetchError(FetchError):
+    """Retryable: server error, timeout, or network failure."""
+
+    pass
+
 
 @dataclass
 class FetchResult:
@@ -18,12 +39,28 @@ class FetchResult:
 
 async def fetch_feed(feed: Feed) -> FetchResult:
     headers = {
-        "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"),
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
     }
-    async with httpx.AsyncClient(timeout=settings.http_timeout, follow_redirects=True) as client:
-        response = await client.get(feed.url, headers=headers)
+    try:
+        async with httpx.AsyncClient(timeout=settings.http_timeout, follow_redirects=True) as client:
+            response = await client.get(feed.url, headers=headers)
+    except httpx.UnsupportedProtocol as exc:
+        raise PermanentFetchError(str(exc), http_status=0) from exc
+    except (httpx.TimeoutException, httpx.ConnectError) as exc:
+        raise TransientFetchError(str(exc)) from exc
+
+    try:
         response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        if code in _PERMANENT_CODES:
+            raise PermanentFetchError(str(exc), http_status=code) from exc
+        raise TransientFetchError(str(exc)) from exc
 
     parsed = feedparser.parse(response.text)
     title = getattr(parsed.feed, "title", "") or ""
