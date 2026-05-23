@@ -99,6 +99,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- GitHub Actions CI for **Backend** (`.github/workflows/ci-backend.yml`) — lint (ruff
+  check + format) and unit + integration tests run in parallel on every PR; e2e tests
+  against a real `pgvector/pgvector:pg17` service container execute on push to `main`
+  only; `uv sync --frozen` ensures reproducible builds; uv lock-file cache keyed on
+  `uv.lock`; coverage report uploaded as artifact
+- GitHub Actions CI for **Frontend** (`.github/workflows/ci-frontend.yml`) — Biome
+  (`biome ci`, read-only), TypeScript type check, and Vitest (`vitest run`) run in
+  parallel on every PR; production `next build` gates on all three passing; `.next/cache`
+  cached between runs; `pnpm install --frozen-lockfile` for reproducibility
+- GitHub Actions **Security** workflow (`.github/workflows/security.yml`) — CodeQL SAST
+  for Python and TypeScript (`security-and-quality` query suite), `pip-audit` via `uvx`
+  against exported production requirements, `pnpm audit --audit-level=high`; triggers on
+  push to `main`, pull requests, and weekly cron (Monday 03:00 UTC)
+- **Dependabot** (`.github/dependabot.yml`) — configured for `pip` (backend), `npm`
+  (frontend), and `github-actions` (workflow files); weekly schedule, minor/patch
+  dev-deps grouped into a single PR to reduce noise
+- All action refs **SHA-pinned** to exact commit hashes for supply chain security;
+  version tag preserved as inline comment; Dependabot manages future SHA bumps
+- `frontend/.nvmrc` — Node.js 22 LTS declared as canonical runtime; read by
+  `actions/setup-node` in CI
+- `concurrency` groups with `cancel-in-progress: true` on PRs — stale runs cancelled
+  automatically to avoid wasted CI minutes
+
 - `frontend/.gitignore` and `frontend/.dockerignore` — exclude `.pnpm-store/` (320 MB),
   `node_modules/`, and `.next/` from git tracking and Docker build context
 
