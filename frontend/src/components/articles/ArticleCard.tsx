@@ -111,7 +111,9 @@ export function ArticleCard({ article }: ArticleCardProps) {
         <div className="flex items-center gap-2 min-w-0">
           <SourceLabel url={article.url} />
           <span className="shrink-0">·</span>
-          <span className="shrink-0">{formatDate(article.published_at ?? article.fetched_at, locale)}</span>
+          <span className="shrink-0">
+            {formatDate(article.published_at ?? article.fetched_at, locale)}
+          </span>
         </div>
 
         <div className="flex items-center gap-1">

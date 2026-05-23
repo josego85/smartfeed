@@ -1,4 +1,12 @@
 services:
+  backend:
+    volumes:
+      - ./backend/src:/app/src
+
+  worker:
+    volumes:
+      - ./backend/src:/app/src
+
   frontend:
     build:
       context: ./frontend

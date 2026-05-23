@@ -179,6 +179,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 - `frontend/.gitignore` and `frontend/.dockerignore` — exclude `.pnpm-store/` (320 MB),
   `node_modules/`, and `.next/` from git tracking and Docker build context
+- `docker-compose.override.yml` backend and worker services: `./backend/src` mounted
+  at `/app/src` — source changes reflect instantly without rebuild, matching the
+  frontend live-reload pattern
 
 #### Fixed
 

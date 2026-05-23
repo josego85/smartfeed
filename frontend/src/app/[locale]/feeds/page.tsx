@@ -19,8 +19,15 @@ const STATUS_BADGE: Record<
   { labelKey: "statusForbidden" | "statusNotFound" | "statusUnreachable"; className: string }
 > = {
   forbidden: { labelKey: "statusForbidden", className: "border-red-200 bg-red-50 text-red-600" },
-  not_found: { labelKey: "statusNotFound", className: "border-orange-200 bg-orange-50 text-orange-600" },
-  unreachable: { labelKey: "statusUnreachable", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+  // biome-ignore lint/style/useNamingConvention: mirrors FeedStatus enum value from backend
+  not_found: {
+    labelKey: "statusNotFound",
+    className: "border-orange-200 bg-orange-50 text-orange-600",
+  },
+  unreachable: {
+    labelKey: "statusUnreachable",
+    className: "border-yellow-200 bg-yellow-50 text-yellow-700",
+  },
 };
 
 function SyncButton({ feed }: { feed: Feed }) {

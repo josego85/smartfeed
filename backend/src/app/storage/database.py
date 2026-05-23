@@ -132,7 +132,5 @@ def _migrate() -> None:
                 " status VARCHAR(20) NOT NULL DEFAULT 'active'"
             )
         )
-        conn.execute(
-            text("ALTER TABLE feeds ADD COLUMN IF NOT EXISTS last_error TEXT")
-        )
+        conn.execute(text("ALTER TABLE feeds ADD COLUMN IF NOT EXISTS last_error TEXT"))
         conn.commit()

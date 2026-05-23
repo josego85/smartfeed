@@ -47,7 +47,9 @@ async def fetch_feed(feed: Feed) -> FetchResult:
         "Pragma": "no-cache",
     }
     try:
-        async with httpx.AsyncClient(timeout=settings.http_timeout, follow_redirects=True) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.http_timeout, follow_redirects=True
+        ) as client:
             response = await client.get(feed.url, headers=headers)
     except httpx.UnsupportedProtocol as exc:
         raise PermanentFetchError(str(exc), http_status=0) from exc

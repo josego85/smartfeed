@@ -1,13 +1,13 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class FeedStatus(str, Enum):
+class FeedStatus(StrEnum):
     ACTIVE = "active"
-    FORBIDDEN = "forbidden"      # 403 — feed blocks automated access
-    NOT_FOUND = "not_found"      # 404 / 410 — feed URL no longer exists
+    FORBIDDEN = "forbidden"  # 403 — feed blocks automated access
+    NOT_FOUND = "not_found"  # 404 / 410 — feed URL no longer exists
     UNREACHABLE = "unreachable"  # 5xx / timeout / network error
 
 

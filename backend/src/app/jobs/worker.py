@@ -13,7 +13,7 @@ from ..storage.postgres_repo import PostgresRepository
 from ..storage.vector_store import PgVectorStore
 
 _PERMANENT_STATUS_MAP = {
-    0: FeedStatus.NOT_FOUND,    # invalid URL (no protocol, malformed)
+    0: FeedStatus.NOT_FOUND,  # invalid URL (no protocol, malformed)
     403: FeedStatus.FORBIDDEN,
     404: FeedStatus.NOT_FOUND,
     410: FeedStatus.NOT_FOUND,
