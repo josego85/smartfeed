@@ -58,6 +58,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - Feed title stored as empty string after `POST /feeds/` — `FeedSyncService.sync()` now
   calls `update_feed_metadata` on the first successful sync, populating title and
   description from the RSS/Atom channel element
+- 20 ruff lint errors resolved across 14 files: import ordering (I001),
+  lines over 100 chars (E501), `timezone.utc` → `datetime.UTC` (UP017),
+  unused imports in `database.py`, `test_config.py`, `test_fetcher.py` (F401),
+  and unused variable `saved` in `test_repository.py` (F841)
+- ruff format applied to 23 unformatted files (consistent style across
+  all production and test code)
+
+#### Security
+
+- `idna` bumped 3.13 → 3.16 (CVE-2026-45409) — transitive via `anyio` / `httpx`
+- `starlette` bumped 1.0.0 → 1.1.0 (PYSEC-2026-161) — transitive via `fastapi`
+- `urllib3` bumped 2.6.3 → 2.7.0 (PYSEC-2026-141, PYSEC-2026-142) — transitive
+  via `requests` ← `litellm`; only `uv.lock` updated, `pyproject.toml` unchanged
 
 ---
 
@@ -130,6 +143,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `python:3.12-slim` ships without system CA certificates; `httpx`/`anyio` TLS handshake
   failed silently with `ConnectError` for all HTTPS feeds in Docker — added
   `apt-get install ca-certificates` to `backend/Dockerfile`
+- `pip-audit` in security workflow failed with editable-install hash error — added
+  `--no-emit-project` to `uv export` so only third-party deps with hashes are passed
+- `pnpm/action-setup@v6` requires an explicit pnpm version; added
+  `"packageManager": "pnpm@10.11.0"` to `frontend/package.json` as the single
+  source of truth (read automatically by the action, Corepack, and Renovate)
 
 ---
 
