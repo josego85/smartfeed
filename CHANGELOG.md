@@ -92,6 +92,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - i18n keys `delete`, `deleteConfirmTitle`, `deleteConfirmDescription`,
   `deleteConfirmCancel`, `deleteConfirmAction` in EN / ES / DE
 
+#### Security
+
+- `next` bumped 16.2.4 → 16.2.6 (GHSA-8h8q-6873-q5fj, GHSA-26hh-7cqf-hhc6,
+  GHSA-mg66-mrh9-m8jx, GHSA-c4j6-fc7j-m34r, GHSA-492v-c6pp-mqqv,
+  GHSA-267c-6grr-h53f, GHSA-36qx-fr4f-26g5) — DoS via Server Components,
+  Middleware bypass, SSRF via WebSocket upgrades; 7 high-severity CVEs resolved
+- `next-intl` bumped to `^4.12.0` (GHSA-r27j-894h-3w3p) — transitive
+  `icu-minify@<=4.9.1` prototype-key DoS in `select` formatters with
+  `precompile: true`; patched in `icu-minify@4.9.2` bundled by `next-intl@4.12.0`
+- `@vitejs/plugin-react` bumped 4.x → `^5.2.0`; `pnpm.overrides`:
+  `vite >= 6.4.2` (GHSA-4w7w-66w2-5vf9 path traversal + GHSA-67mh-4wv8-2f99
+  esbuild dev-server CORS) and `postcss >= 8.5.10` (GHSA-qx2v-qp2m-jg93 XSS
+  via unescaped `</style>` in stringify output) — all transitive; no
+  `package.json` direct-dep changes beyond the version constraints
+
 #### Fixed
 
 - Production build crashes with `useContext` error when `NODE_ENV=development` is inherited
