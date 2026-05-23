@@ -36,7 +36,10 @@
     "syncActivity": "Syncing",
     "lastSynced": "Last synced: {date}",
     "empty": "No feeds yet. Add one above to get started.",
-    "error": "Could not load feeds. Is the backend running?"
+    "error": "Could not load feeds. Is the backend running?",
+    "statusForbidden": "Blocked",
+    "statusNotFound": "Not found",
+    "statusUnreachable": "Unreachable"
   },
   "search": {
     "title": "Semantic Search",

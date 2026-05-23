@@ -18,8 +18,33 @@ import { formatDate, getTopicMeta } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 import type { Article } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Sparkles, Trash2 } from "lucide-react";
+import { ExternalLink, Rss, Sparkles, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+
+function SourceLabel({ url }: { url: string }) {
+  let domain = "";
+  try {
+    domain = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      <img
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
+        alt=""
+        className="h-3.5 w-3.5 shrink-0 rounded-sm"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+          (e.currentTarget.nextElementSibling as HTMLElement | null)?.classList.remove("hidden");
+        }}
+      />
+      <Rss className="h-3 w-3 shrink-0 text-slate-300 hidden" aria-hidden />
+      <span className="truncate">{domain}</span>
+    </div>
+  );
+}
 
 interface ArticleCardProps {
   article: Article;
@@ -83,7 +108,13 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
       {/* Footer */}
       <div className="mt-auto flex items-center justify-between text-xs text-slate-400">
-        <span>{formatDate(article.published_at ?? article.fetched_at, locale)}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <SourceLabel url={article.url} />
+          <span className="shrink-0">·</span>
+          <span className="shrink-0">
+            {formatDate(article.published_at ?? article.fetched_at, locale)}
+          </span>
+        </div>
 
         <div className="flex items-center gap-1">
           {/* Delete */}

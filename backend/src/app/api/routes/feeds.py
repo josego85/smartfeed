@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from redis import asyncio as aioredis
 
 from ...core.config import settings
@@ -17,6 +17,13 @@ class FeedCreate(BaseModel):
     url: str
     title: str = ""
     description: str = ""
+
+    @field_validator("url")
+    @classmethod
+    def url_must_have_protocol(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
 
 
 @router.get("/", response_model=list[Feed])

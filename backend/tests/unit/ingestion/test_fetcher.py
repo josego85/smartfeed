@@ -7,7 +7,13 @@ import pytest
 import respx
 
 from app.core.models import Feed
-from app.ingestion.fetcher import FetchResult, _parse_date, fetch_feed
+from app.ingestion.fetcher import (
+    FetchResult,
+    PermanentFetchError,
+    TransientFetchError,
+    _parse_date,
+    fetch_feed,
+)
 
 _RSS_XML = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -106,17 +112,41 @@ class TestFetchFeed:
         assert result.articles[1].published_at is None
 
     @respx.mock
-    async def test_raises_on_404(self):
+    async def test_raises_permanent_error_on_403(self):
+        feed = Feed(id=1, url="https://example.com/rss")
+        respx.get(feed.url).mock(return_value=httpx.Response(403))
+        with pytest.raises(PermanentFetchError) as exc_info:
+            await fetch_feed(feed)
+        assert exc_info.value.http_status == 403
+
+    @respx.mock
+    async def test_raises_permanent_error_on_404(self):
         feed = Feed(id=1, url="https://example.com/rss")
         respx.get(feed.url).mock(return_value=httpx.Response(404))
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(PermanentFetchError) as exc_info:
+            await fetch_feed(feed)
+        assert exc_info.value.http_status == 404
+
+    @respx.mock
+    async def test_raises_permanent_error_on_410(self):
+        feed = Feed(id=1, url="https://example.com/rss")
+        respx.get(feed.url).mock(return_value=httpx.Response(410))
+        with pytest.raises(PermanentFetchError) as exc_info:
+            await fetch_feed(feed)
+        assert exc_info.value.http_status == 410
+
+    @respx.mock
+    async def test_raises_transient_error_on_500(self):
+        feed = Feed(id=1, url="https://example.com/rss")
+        respx.get(feed.url).mock(return_value=httpx.Response(500))
+        with pytest.raises(TransientFetchError):
             await fetch_feed(feed)
 
     @respx.mock
-    async def test_raises_on_500(self):
+    async def test_raises_transient_error_on_503(self):
         feed = Feed(id=1, url="https://example.com/rss")
-        respx.get(feed.url).mock(return_value=httpx.Response(500))
-        with pytest.raises(httpx.HTTPStatusError):
+        respx.get(feed.url).mock(return_value=httpx.Response(503))
+        with pytest.raises(TransientFetchError):
             await fetch_feed(feed)
 
     @respx.mock

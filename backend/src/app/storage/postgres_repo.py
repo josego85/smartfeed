@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, joinedload
 
 from ..core.interfaces import FeedRepository
-from ..core.models import Article, Feed, Topic
+from ..core.models import Article, Feed, FeedStatus, Topic
 from .database import ArticleORM, FeedORM, TopicORM, engine
 
 
@@ -16,6 +16,8 @@ def _to_feed(orm: FeedORM) -> Feed:
         title=orm.title,
         description=orm.description,
         last_synced_at=orm.last_synced_at,
+        status=FeedStatus(orm.status),
+        last_error=orm.last_error,
     )
 
 
@@ -183,6 +185,16 @@ class PostgresRepository(FeedRepository):
             if orm:
                 orm.topic_id = topic_orm.id if topic_orm else None
                 orm.summary = summary
+                session.commit()
+
+    async def update_feed_status(
+        self, feed_id: int, status: FeedStatus, last_error: str | None = None
+    ) -> None:
+        with Session(engine) as session:
+            orm = session.get(FeedORM, feed_id)
+            if orm:
+                orm.status = status.value
+                orm.last_error = last_error
                 session.commit()
 
     async def list_topics(self) -> list[Topic]:

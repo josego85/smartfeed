@@ -36,7 +36,10 @@
     "syncActivity": "Synchronisierung",
     "lastSynced": "Zuletzt synchronisiert: {date}",
     "empty": "Noch keine Quellen. Fügen Sie oben eine hinzu, um zu beginnen.",
-    "error": "Quellen konnten nicht geladen werden. Läuft der Server?"
+    "error": "Quellen konnten nicht geladen werden. Läuft der Server?",
+    "statusForbidden": "Blockiert",
+    "statusNotFound": "Nicht gefunden",
+    "statusUnreachable": "Nicht erreichbar"
   },
   "search": {
     "title": "Semantische Suche",
