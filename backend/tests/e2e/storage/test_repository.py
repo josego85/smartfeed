@@ -9,6 +9,8 @@ Run:
     docker compose -f docker-compose.test.yml up -d
     uv run pytest -m e2e -v
 """
+from datetime import UTC
+
 import pytest
 
 from app.core.interfaces import FeedRepository
@@ -94,9 +96,9 @@ class TestDeleteFeed:
 
 class TestUpdateFeedSyncTime:
     async def test_last_synced_at_is_set(self, repo: FeedRepository):
-        from datetime import datetime, timezone
+        from datetime import datetime
         feed = await repo.save_feed(_feed())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         await repo.update_feed_sync_time(feed.id, now)
         updated = await repo.get_feed(feed.id)
         assert updated.last_synced_at is not None
@@ -135,7 +137,7 @@ class TestSaveArticlesBulk:
         article = _article(feed.id, "https://example.com/a1")
         await repo.save_articles_bulk([article])
         # save same URL again — must not raise, must not duplicate
-        saved = await repo.save_articles_bulk([article])
+        await repo.save_articles_bulk([article])
         assert len(await repo.list_articles(feed_id=feed.id)) == 1
 
     async def test_empty_list_returns_empty(self, repo: FeedRepository):

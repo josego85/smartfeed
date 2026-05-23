@@ -1,8 +1,18 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, create_engine, text
-from sqlalchemy.orm import DeclarativeBase, Session, relationship
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    text,
+)
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 from ..core.config import settings
 from .seeds import SEED_TOPICS

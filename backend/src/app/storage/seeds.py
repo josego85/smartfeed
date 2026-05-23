@@ -12,7 +12,8 @@ SEED_TOPICS: list[dict] = [
     {
         "name": "Web Development & Frontend",
         "description": (
-            "Articles about web development, covering frontend and backend programming, JavaScript, "
+            "Articles about web development, covering frontend and backend programming, "
+            "JavaScript, "
             "TypeScript, React, Vue, Angular, Next.js, CSS, HTML, REST APIs, GraphQL, Node.js, "
             "web frameworks, browser technologies, UI and UX design, web performance optimization, "
             "single-page applications, server-side rendering, and full-stack development practices."
@@ -69,7 +70,8 @@ SEED_TOPICS: list[dict] = [
         "name": "Science & Research",
         "description": (
             "Articles about scientific research and academic studies, covering physics, biology, "
-            "chemistry, mathematics, quantum computing, space exploration, astronomy, neuroscience, "
+            "chemistry, mathematics, quantum computing, space exploration, "
+            "astronomy, neuroscience, "
             "genomics, climate science, and technology research breakthroughs published in "
             "peer-reviewed journals or announced by research institutions."
         ),

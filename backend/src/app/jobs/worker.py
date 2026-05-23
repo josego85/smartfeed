@@ -77,7 +77,9 @@ async def sync_all_feeds_job(ctx: dict) -> None:
 async def startup(ctx: dict) -> None:
     repo = PostgresRepository()
     ctx["repo"] = repo
-    ctx["sync_service"] = FeedSyncService(repo, PgVectorStore(), LiteLLMSummarizer(), LLMClassifier())
+    ctx["sync_service"] = FeedSyncService(
+        repo, PgVectorStore(), LiteLLMSummarizer(), LLMClassifier()
+    )
 
 
 async def shutdown(ctx: dict) -> None:

@@ -138,7 +138,12 @@ class PostgresRepository(FeedRepository):
                 q = q.filter(ArticleORM.feed_id == feed_id)
             if topic:
                 q = q.join(ArticleORM.topic).filter(TopicORM.name == topic)
-            rows = q.order_by(nulls_last(ArticleORM.published_at.desc())).offset(offset).limit(limit).all()
+            rows = (
+                q.order_by(nulls_last(ArticleORM.published_at.desc()))
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
             return [_to_article(a) for a in rows]
 
     async def get_article(self, article_id: int) -> Article | None:

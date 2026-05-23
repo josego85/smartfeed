@@ -1,8 +1,10 @@
 import asyncio
+
 import typer
+
+from ..api.dependencies import get_repo, get_summarizer, get_vector_store
 from ..core.config import settings
 from ..core.models import Feed
-from ..api.dependencies import get_repo, get_vector_store, get_summarizer
 from ..services.sync_service import FeedSyncService
 
 app = typer.Typer(help="SmartFeed CLI")

@@ -44,8 +44,12 @@ class TestAddFeed:
         assert client.post("/api/feeds/", json={}).status_code == 422
 
     def test_accepts_optional_title(self, client, mock_repo):
-        mock_repo.save_feed.return_value = Feed(id=1, url="https://example.com/rss", title="My Feed")
-        data = client.post("/api/feeds/", json={"url": "https://example.com/rss", "title": "My Feed"}).json()
+        mock_repo.save_feed.return_value = Feed(
+            id=1, url="https://example.com/rss", title="My Feed"
+        )
+        data = client.post(
+            "/api/feeds/", json={"url": "https://example.com/rss", "title": "My Feed"}
+        ).json()
         assert data["title"] == "My Feed"
 
     def test_accepts_optional_description(self, client, mock_repo):

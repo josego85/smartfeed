@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..core.config import settings
 from ..core.interfaces import Classifier, FeedRepository, Summarizer, VectorStore
@@ -39,7 +39,7 @@ class FeedSyncService:
         if new_articles:
             saved = await self._repo.save_articles_bulk(new_articles)
 
-        await self._repo.update_feed_sync_time(feed_id, datetime.now(timezone.utc))
+        await self._repo.update_feed_sync_time(feed_id, datetime.now(UTC))
 
         result = SyncResult(
             feed_id=feed_id,

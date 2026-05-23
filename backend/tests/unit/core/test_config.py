@@ -1,5 +1,4 @@
 """Unit tests for Settings / pydantic-settings configuration."""
-import pytest
 
 from app.core.config import Settings
 

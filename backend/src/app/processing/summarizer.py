@@ -3,7 +3,6 @@ import litellm
 from ..core.config import settings
 from ..core.interfaces import Summarizer
 
-
 _SYSTEM_PROMPT = (
     "You are a concise technical writer. "
     "Summarize the article in 2-3 sentences focusing on the key insight. "
