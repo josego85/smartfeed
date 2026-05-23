@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from .models import Feed, Article, Topic, SearchResult, SyncJobStatus
+
+from .models import Article, Feed, SearchResult, SyncJobStatus, Topic
 
 
 class FeedRepository(ABC):
@@ -50,7 +51,9 @@ class FeedRepository(ABC):
     async def get_articles_by_ids(self, article_ids: list[int]) -> list[Article]: ...
 
     @abstractmethod
-    async def update_article_enrichment(self, article_id: int, topic: str, summary: str) -> None: ...
+    async def update_article_enrichment(
+        self, article_id: int, topic: str, summary: str
+    ) -> None: ...
 
     @abstractmethod
     async def list_topics(self) -> list[Topic]: ...

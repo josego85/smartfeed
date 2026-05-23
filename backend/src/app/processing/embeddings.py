@@ -1,6 +1,6 @@
 import httpx
-from ..core.config import settings
 
+from ..core.config import settings
 
 
 async def embed(text: str) -> list[float]:

@@ -25,12 +25,12 @@ class Settings(BaseSettings):
 
     # ── Embeddings ────────────────────────────────────────────────────────────
     embedding_model: str = "nomic-embed-text"
-    embedding_dim: int = 768           # must match the embedding model output
+    embedding_dim: int = 768  # must match the embedding model output
 
     # ── Processing ────────────────────────────────────────────────────────────
-    max_classify_chars: int = 2000     # chars fed to the classifier
-    max_summarize_chars: int = 4000    # chars sent to the LLM summarizer
-    sync_concurrency: int = 3          # parallel enrich tasks per sync job
+    max_classify_chars: int = 2000  # chars fed to the classifier
+    max_summarize_chars: int = 4000  # chars sent to the LLM summarizer
+    sync_concurrency: int = 3  # parallel enrich tasks per sync job
 
     # ── API pagination ────────────────────────────────────────────────────────
     articles_default_limit: int = 50
@@ -41,9 +41,9 @@ class Settings(BaseSettings):
 
     # ── Worker ────────────────────────────────────────────────────────────────
     worker_max_jobs: int = 10
-    worker_job_timeout: int = 600      # seconds before a job is killed
-    pubsub_timeout: float = 15.0       # seconds to wait for a Redis pub/sub message (SSE keepalive)
-    job_result_timeout: int = 5        # seconds to wait when fetching a completed job result
+    worker_job_timeout: int = 600  # seconds before a job is killed
+    pubsub_timeout: float = 15.0  # seconds to wait for a Redis pub/sub message (SSE keepalive)
+    job_result_timeout: int = 5  # seconds to wait when fetching a completed job result
 
 
 settings = Settings()

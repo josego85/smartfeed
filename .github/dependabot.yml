@@ -1,0 +1,43 @@
+version: 2
+
+updates:
+  # Python dependencies (uv/pip ecosystem)
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Asuncion
+    open-pull-requests-limit: 5
+    groups:
+      # Group minor/patch dev-only bumps into a single PR to reduce noise
+      dev-dependencies:
+        dependency-type: development
+        update-types: ["minor", "patch"]
+
+  # Node.js / pnpm dependencies
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Asuncion
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: ["minor", "patch"]
+
+  # GitHub Actions — pin and auto-update action SHAs
+  # Best practice: each action should be pinned to a full commit SHA in the workflow
+  # files; Dependabot will open PRs to bump those SHAs when new versions are tagged.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Asuncion
+    open-pull-requests-limit: 5

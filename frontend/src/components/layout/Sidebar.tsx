@@ -2,12 +2,12 @@
 
 import { useSyncContext } from "@/contexts/sync";
 import type { SyncJob } from "@/contexts/sync";
-import { getTopicMeta, TOPICS } from "@/lib/topics";
+import { TOPICS, getTopicMeta } from "@/lib/topics";
 import { cn } from "@/lib/utils";
-import { BookOpen, CheckCircle, Loader2, Rss, Search, XCircle, Zap } from "lucide-react";
 import { Link, usePathname } from "@/navigation";
-import { useSearchParams } from "next/navigation";
+import { BookOpen, CheckCircle, Loader2, Rss, Search, XCircle, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const NAV = [

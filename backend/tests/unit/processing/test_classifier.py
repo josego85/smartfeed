@@ -1,4 +1,5 @@
 """Unit tests for LLMClassifier (litellm mocked)."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -109,13 +110,17 @@ class TestClassifyLLMCall:
 
 class TestModelId:
     def test_ollama_prefix(self, classifier):
-        with patch.object(settings, "llm_provider", "ollama"), \
-             patch.object(settings, "llm_model", "llama3.2"):
+        with (
+            patch.object(settings, "llm_provider", "ollama"),
+            patch.object(settings, "llm_model", "llama3.2"),
+        ):
             assert classifier._model_id() == "ollama/llama3.2"
 
     def test_cloud_no_prefix(self, classifier):
-        with patch.object(settings, "llm_provider", "anthropic"), \
-             patch.object(settings, "llm_model", "claude-haiku-4-5"):
+        with (
+            patch.object(settings, "llm_provider", "anthropic"),
+            patch.object(settings, "llm_model", "claude-haiku-4-5"),
+        ):
             assert classifier._model_id() == "claude-haiku-4-5"
 
     def test_ollama_api_base_set(self, classifier):

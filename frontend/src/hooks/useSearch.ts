@@ -1,5 +1,5 @@
-import { MIN_SEARCH_LENGTH, SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { searchApi } from "@/lib/api";
+import { MIN_SEARCH_LENGTH, SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 

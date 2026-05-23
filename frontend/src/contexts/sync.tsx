@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { TERMINAL_STATUSES } from "@/lib/constants";
 import type { SyncResult, SyncStatus } from "@/types";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 export interface SyncJob {
   feedId: number;

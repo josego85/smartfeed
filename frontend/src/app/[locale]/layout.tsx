@@ -1,10 +1,10 @@
 import { Sidebar } from "@/components/layout/Sidebar";
+import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Inter } from "next/font/google";
 import { type ReactNode, Suspense } from "react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { NextIntlClientProvider } from "next-intl";
-import { routing } from "@/i18n/routing";
 import "../globals.css";
 import { Providers } from "../providers";
 

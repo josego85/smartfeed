@@ -1,8 +1,10 @@
 import asyncio
+
 import typer
+
+from ..api.dependencies import get_repo, get_summarizer, get_vector_store
 from ..core.config import settings
 from ..core.models import Feed
-from ..api.dependencies import get_repo, get_vector_store, get_summarizer
 from ..services.sync_service import FeedSyncService
 
 app = typer.Typer(help="SmartFeed CLI")
@@ -41,9 +43,7 @@ def feeds_sync():
                 continue
             typer.echo(f"Syncing {feed.title or feed.url}...")
             result = await service.sync(feed.id)
-            typer.echo(
-                f"  fetched={result.fetched}  new={result.new}  skipped={result.skipped}"
-            )
+            typer.echo(f"  fetched={result.fetched}  new={result.new}  skipped={result.skipped}")
 
     asyncio.run(run())
 

@@ -68,11 +68,7 @@ class PostgresRepository(FeedRepository):
 
     async def get_existing_urls(self, feed_id: int) -> set[str]:
         with Session(engine) as session:
-            rows = (
-                session.query(ArticleORM.url)
-                .filter_by(feed_id=feed_id)
-                .all()
-            )
+            rows = session.query(ArticleORM.url).filter_by(feed_id=feed_id).all()
             return {row.url for row in rows}
 
     async def save_articles_bulk(self, articles: list[Article]) -> list[Article]:
@@ -90,9 +86,7 @@ class PostgresRepository(FeedRepository):
                 }
                 for a in articles
             ]
-            stmt = pg_insert(ArticleORM).values(rows).on_conflict_do_nothing(
-                index_elements=["url"]
-            )
+            stmt = pg_insert(ArticleORM).values(rows).on_conflict_do_nothing(index_elements=["url"])
             session.execute(stmt)
             session.commit()
             urls = [a.url for a in articles]
@@ -138,7 +132,12 @@ class PostgresRepository(FeedRepository):
                 q = q.filter(ArticleORM.feed_id == feed_id)
             if topic:
                 q = q.join(ArticleORM.topic).filter(TopicORM.name == topic)
-            rows = q.order_by(nulls_last(ArticleORM.published_at.desc())).offset(offset).limit(limit).all()
+            rows = (
+                q.order_by(nulls_last(ArticleORM.published_at.desc()))
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
             return [_to_article(a) for a in rows]
 
     async def get_article(self, article_id: int) -> Article | None:

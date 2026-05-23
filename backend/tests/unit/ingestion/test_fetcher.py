@@ -1,11 +1,11 @@
 """Unit tests for the RSS/Atom feed fetcher (httpx mocked via respx)."""
+
 import time
 
 import httpx
 import pytest
 import respx
 
-from app.core.config import settings
 from app.core.models import Feed
 from app.ingestion.fetcher import FetchResult, _parse_date, fetch_feed
 

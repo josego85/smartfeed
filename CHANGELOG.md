@@ -58,6 +58,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - Feed title stored as empty string after `POST /feeds/` — `FeedSyncService.sync()` now
   calls `update_feed_metadata` on the first successful sync, populating title and
   description from the RSS/Atom channel element
+- 20 ruff lint errors resolved across 14 files: import ordering (I001),
+  lines over 100 chars (E501), `timezone.utc` → `datetime.UTC` (UP017),
+  unused imports in `database.py`, `test_config.py`, `test_fetcher.py` (F401),
+  and unused variable `saved` in `test_repository.py` (F841)
+- ruff format applied to 23 unformatted files (consistent style across
+  all production and test code)
+
+#### Security
+
+- `idna` bumped 3.13 → 3.16 (CVE-2026-45409) — transitive via `anyio` / `httpx`
+- `starlette` bumped 1.0.0 → 1.1.0 (PYSEC-2026-161) — transitive via `fastapi`
+- `urllib3` bumped 2.6.3 → 2.7.0 (PYSEC-2026-141, PYSEC-2026-142) — transitive
+  via `requests` ← `litellm`; only `uv.lock` updated, `pyproject.toml` unchanged
 
 ---
 
@@ -79,6 +92,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - i18n keys `delete`, `deleteConfirmTitle`, `deleteConfirmDescription`,
   `deleteConfirmCancel`, `deleteConfirmAction` in EN / ES / DE
 
+#### Security
+
+- `next` bumped 16.2.4 → 16.2.6 (GHSA-8h8q-6873-q5fj, GHSA-26hh-7cqf-hhc6,
+  GHSA-mg66-mrh9-m8jx, GHSA-c4j6-fc7j-m34r, GHSA-492v-c6pp-mqqv,
+  GHSA-267c-6grr-h53f, GHSA-36qx-fr4f-26g5) — DoS via Server Components,
+  Middleware bypass, SSRF via WebSocket upgrades; 7 high-severity CVEs resolved
+- `next-intl` bumped to `^4.12.0` (GHSA-r27j-894h-3w3p) — transitive
+  `icu-minify@<=4.9.1` prototype-key DoS in `select` formatters with
+  `precompile: true`; patched in `icu-minify@4.9.2` bundled by `next-intl@4.12.0`
+- `@vitejs/plugin-react` bumped 4.x → `^5.2.0`; `pnpm.overrides`:
+  `vite >= 6.4.2` (GHSA-4w7w-66w2-5vf9 path traversal + GHSA-67mh-4wv8-2f99
+  esbuild dev-server CORS) and `postcss >= 8.5.10` (GHSA-qx2v-qp2m-jg93 XSS
+  via unescaped `</style>` in stringify output) — all transitive; no
+  `package.json` direct-dep changes beyond the version constraints
+
 #### Fixed
 
 - Production build crashes with `useContext` error when `NODE_ENV=development` is inherited
@@ -99,6 +127,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Added
 
+- GitHub Actions CI for **Backend** (`.github/workflows/ci-backend.yml`) — lint (ruff
+  check + format) and unit + integration tests run in parallel on every PR; e2e tests
+  against a real `pgvector/pgvector:pg17` service container execute on push to `main`
+  only; `uv sync --frozen` ensures reproducible builds; uv lock-file cache keyed on
+  `uv.lock`; coverage report uploaded as artifact
+- GitHub Actions CI for **Frontend** (`.github/workflows/ci-frontend.yml`) — Biome
+  (`biome ci`, read-only), TypeScript type check, and Vitest (`vitest run`) run in
+  parallel on every PR; production `next build` gates on all three passing; `.next/cache`
+  cached between runs; `pnpm install --frozen-lockfile` for reproducibility
+- GitHub Actions **Security** workflow (`.github/workflows/security.yml`) — CodeQL SAST
+  for Python and TypeScript (`security-and-quality` query suite), `pip-audit` via `uvx`
+  against exported production requirements, `pnpm audit --audit-level=high`; triggers on
+  push to `main`, pull requests, and weekly cron (Monday 03:00 UTC)
+- **Dependabot** (`.github/dependabot.yml`) — configured for `pip` (backend), `npm`
+  (frontend), and `github-actions` (workflow files); weekly schedule, minor/patch
+  dev-deps grouped into a single PR to reduce noise
+- All action refs **SHA-pinned** to exact commit hashes for supply chain security;
+  version tag preserved as inline comment; Dependabot manages future SHA bumps
+- `frontend/.nvmrc` — Node.js 22 LTS declared as canonical runtime; read by
+  `actions/setup-node` in CI
+- `concurrency` groups with `cancel-in-progress: true` on PRs — stale runs cancelled
+  automatically to avoid wasted CI minutes
+
 - `frontend/.gitignore` and `frontend/.dockerignore` — exclude `.pnpm-store/` (320 MB),
   `node_modules/`, and `.next/` from git tracking and Docker build context
 
@@ -107,6 +158,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `python:3.12-slim` ships without system CA certificates; `httpx`/`anyio` TLS handshake
   failed silently with `ConnectError` for all HTTPS feeds in Docker — added
   `apt-get install ca-certificates` to `backend/Dockerfile`
+- `pip-audit` in security workflow failed with editable-install hash error — added
+  `--no-emit-project` to `uv export` so only third-party deps with hashes are passed
+- `pnpm/action-setup@v6` requires an explicit pnpm version; added
+  `"packageManager": "pnpm@10.11.0"` to `frontend/package.json` as the single
+  source of truth (read automatically by the action, Corepack, and Renovate)
 
 ---
 

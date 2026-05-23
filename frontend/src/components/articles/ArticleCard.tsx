@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,14 +11,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { useDeleteArticle } from "@/hooks/useDeleteArticle";
+import { articlesApi } from "@/lib/api";
 import { formatDate, getTopicMeta } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 import type { Article } from "@/types";
-import { ExternalLink, Sparkles, Trash2 } from "lucide-react";
-import { articlesApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations, useLocale } from "next-intl";
-import { useDeleteArticle } from "@/hooks/useDeleteArticle";
+import { ExternalLink, Sparkles, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 interface ArticleCardProps {
   article: Article;

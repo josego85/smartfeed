@@ -1,4 +1,5 @@
 """Unit tests for FeedSyncService — all external I/O is mocked."""
+
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -12,6 +13,7 @@ _FETCH_MODULE = "app.services.sync_service.fetch_feed"
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_repo() -> AsyncMock:
@@ -74,6 +76,7 @@ def fetch_result_two_articles() -> FetchResult:
 
 
 # ── sync() tests ──────────────────────────────────────────────────────────────
+
 
 class TestSync:
     async def test_raises_for_unknown_feed(self, service, mock_repo):
@@ -185,15 +188,14 @@ class TestSync:
 
 # ── enrich() tests ────────────────────────────────────────────────────────────
 
+
 class TestEnrich:
     async def test_empty_ids_returns_early(self, service, mock_repo):
         await service.enrich([])
         mock_repo.get_articles_by_ids.assert_called_once_with([])
         mock_repo.update_article_enrichment.assert_not_called()
 
-    async def test_enriches_all_articles(
-        self, service, mock_repo, mock_vector_store
-    ):
+    async def test_enriches_all_articles(self, service, mock_repo, mock_vector_store):
         mock_repo.get_articles_by_ids.return_value = [
             Article(id=1, feed_id=1, url="https://a.com/1", title="T1", content="C1"),
             Article(id=2, feed_id=1, url="https://a.com/2", title="T2", content="C2"),
@@ -229,9 +231,7 @@ class TestEnrich:
 
         mock_summarizer.summarize.assert_called_once()
 
-    async def test_stores_vector_with_correct_id(
-        self, service, mock_repo, mock_vector_store
-    ):
+    async def test_stores_vector_with_correct_id(self, service, mock_repo, mock_vector_store):
         mock_repo.get_articles_by_ids.return_value = [
             Article(id=7, feed_id=1, url="https://a.com/7", title="Title", content="Content"),
         ]

@@ -1,8 +1,18 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, create_engine, text
-from sqlalchemy.orm import DeclarativeBase, Session, relationship
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    text,
+)
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 from ..core.config import settings
 from .seeds import SEED_TOPICS
@@ -76,14 +86,17 @@ def _migrate() -> None:
             )
         conn.commit()
 
-        conn.execute(text(
-            "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
-            " topic_id INTEGER REFERENCES topics(id)"
-        ))
+        conn.execute(
+            text(
+                "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
+                " topic_id INTEGER REFERENCES topics(id)"
+            )
+        )
         conn.commit()
 
         # Migrate string topics → topic_id and drop old column (only if column still exists)
-        conn.execute(text("""
+        conn.execute(
+            text("""
             DO $$
             BEGIN
                 IF EXISTS (
@@ -99,11 +112,14 @@ def _migrate() -> None:
                     ALTER TABLE articles DROP COLUMN topic;
                 END IF;
             END $$;
-        """))
+        """)
+        )
         conn.commit()
 
-        conn.execute(text(
-            "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
-            " is_deleted BOOLEAN NOT NULL DEFAULT FALSE"
-        ))
+        conn.execute(
+            text(
+                "ALTER TABLE articles ADD COLUMN IF NOT EXISTS"
+                " is_deleted BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
         conn.commit()

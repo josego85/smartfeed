@@ -9,6 +9,9 @@ Run:
     docker compose -f docker-compose.test.yml up -d
     uv run pytest -m e2e -v
 """
+
+from datetime import UTC
+
 import pytest
 
 from app.core.interfaces import FeedRepository
@@ -94,9 +97,10 @@ class TestDeleteFeed:
 
 class TestUpdateFeedSyncTime:
     async def test_last_synced_at_is_set(self, repo: FeedRepository):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         feed = await repo.save_feed(_feed())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         await repo.update_feed_sync_time(feed.id, now)
         updated = await repo.get_feed(feed.id)
         assert updated.last_synced_at is not None
@@ -135,7 +139,7 @@ class TestSaveArticlesBulk:
         article = _article(feed.id, "https://example.com/a1")
         await repo.save_articles_bulk([article])
         # save same URL again — must not raise, must not duplicate
-        saved = await repo.save_articles_bulk([article])
+        await repo.save_articles_bulk([article])
         assert len(await repo.list_articles(feed_id=feed.id)) == 1
 
     async def test_empty_list_returns_empty(self, repo: FeedRepository):
@@ -149,10 +153,12 @@ class TestGetExistingUrls:
 
     async def test_returns_saved_urls(self, repo: FeedRepository):
         feed = await repo.save_feed(_feed())
-        await repo.save_articles_bulk([
-            _article(feed.id, "https://example.com/a1"),
-            _article(feed.id, "https://example.com/a2"),
-        ])
+        await repo.save_articles_bulk(
+            [
+                _article(feed.id, "https://example.com/a1"),
+                _article(feed.id, "https://example.com/a2"),
+            ]
+        )
         urls = await repo.get_existing_urls(feed.id)
         assert "https://example.com/a1" in urls
         assert "https://example.com/a2" in urls
@@ -167,10 +173,12 @@ class TestGetExistingUrls:
 class TestListArticles:
     async def test_returns_articles_for_feed(self, repo: FeedRepository):
         feed = await repo.save_feed(_feed())
-        await repo.save_articles_bulk([
-            _article(feed.id, "https://example.com/a1"),
-            _article(feed.id, "https://example.com/a2"),
-        ])
+        await repo.save_articles_bulk(
+            [
+                _article(feed.id, "https://example.com/a1"),
+                _article(feed.id, "https://example.com/a2"),
+            ]
+        )
         articles = await repo.list_articles(feed_id=feed.id)
         assert len(articles) == 2
 
@@ -182,17 +190,17 @@ class TestListArticles:
 
     async def test_pagination_limit(self, repo: FeedRepository):
         feed = await repo.save_feed(_feed())
-        await repo.save_articles_bulk([
-            _article(feed.id, f"https://example.com/a{i}") for i in range(5)
-        ])
+        await repo.save_articles_bulk(
+            [_article(feed.id, f"https://example.com/a{i}") for i in range(5)]
+        )
         articles = await repo.list_articles(feed_id=feed.id, limit=2)
         assert len(articles) == 2
 
     async def test_pagination_offset(self, repo: FeedRepository):
         feed = await repo.save_feed(_feed())
-        await repo.save_articles_bulk([
-            _article(feed.id, f"https://example.com/a{i}") for i in range(4)
-        ])
+        await repo.save_articles_bulk(
+            [_article(feed.id, f"https://example.com/a{i}") for i in range(4)]
+        )
         page1 = await repo.list_articles(feed_id=feed.id, limit=2, offset=0)
         page2 = await repo.list_articles(feed_id=feed.id, limit=2, offset=2)
         ids_p1 = {a.id for a in page1}
@@ -252,11 +260,13 @@ class TestDeleteArticle:
 class TestGetArticlesByIds:
     async def test_returns_articles_for_given_ids(self, repo: FeedRepository):
         feed = await repo.save_feed(_feed())
-        saved = await repo.save_articles_bulk([
-            _article(feed.id, "https://example.com/a1"),
-            _article(feed.id, "https://example.com/a2"),
-            _article(feed.id, "https://example.com/a3"),
-        ])
+        saved = await repo.save_articles_bulk(
+            [
+                _article(feed.id, "https://example.com/a1"),
+                _article(feed.id, "https://example.com/a2"),
+                _article(feed.id, "https://example.com/a3"),
+            ]
+        )
         ids = [saved[0].id, saved[2].id]
         found = await repo.get_articles_by_ids(ids)
         assert len(found) == 2

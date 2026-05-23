@@ -1,0 +1,126 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+
+# Cancel in-progress runs on the same PR/branch — saves minutes, avoids queue buildup
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least-privilege: read-only by default, no GITHUB_TOKEN write access
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  # ── Lint & format ─────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Format (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+          # Cache key rotates when the lockfile changes — deterministic & fast
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Install dependencies (frozen — no lock mutations in CI)
+        run: uv sync --frozen
+
+      - name: Ruff — lint
+        run: uv run ruff check .
+
+      - name: Ruff — format check
+        run: uv run ruff format --check .
+
+  # ── Unit + Integration tests (no external services required) ──────────────
+  test-unit-integration:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    env:
+      # Pydantic-settings reads these at import time; mocked tests don't connect
+      DATABASE_URL: postgresql://smartfeed:smartfeed@localhost:5432/smartfeed
+      REDIS_URL: redis://localhost:6379
+      LLM_PROVIDER: ollama
+      LLM_MODEL: llama3.2
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run unit + integration tests
+        run: uv run pytest --ignore=tests/e2e --cov=app --cov-report=xml --cov-report=term-missing -q
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          retention-days: 7
+
+  # ── E2E tests — real PostgreSQL via service container ─────────────────────
+  # Only runs on push to main: PRs get fast feedback from unit+integration.
+  # Uses a service container (native GH Actions) instead of docker-compose —
+  # no Docker-in-Docker, healthcheck built-in, port mapped identically to
+  # docker-compose.test.yml (host 5433 → container 5432).
+  test-e2e:
+    name: E2E Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit-integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: smartfeed_test
+          POSTGRES_USER: smartfeed
+          POSTGRES_PASSWORD: smartfeed
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U smartfeed -d smartfeed_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run e2e tests
+        run: uv run pytest -m e2e -v
+        env:
+          # TEST_DATABASE_URL overrides the default — see testing strategy in CLAUDE.md
+          TEST_DATABASE_URL: postgresql://smartfeed:smartfeed@localhost:5433/smartfeed_test
+          DATABASE_URL: postgresql://smartfeed:smartfeed@localhost:5432/smartfeed
+          REDIS_URL: redis://localhost:6379
+          LLM_PROVIDER: ollama
+          LLM_MODEL: llama3.2
