@@ -97,8 +97,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # vitest run = non-interactive single-pass mode for CI
+      # --passWithNoTests: exit 0 when no test files exist yet (avoids blocking CI)
       - name: Run tests
-        run: pnpm exec vitest run
+        run: pnpm exec vitest run --passWithNoTests
 
   # ── Build (gates on all three checks above) ───────────────────────────────
   # Fan-in: lint + type-check + test must all pass before we pay for a build.
