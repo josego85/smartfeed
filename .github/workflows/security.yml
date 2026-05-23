@@ -68,7 +68,7 @@ jobs:
       # then run pip-audit via uvx (ephemeral venv — no need to add it to pyproject.toml).
       # --require-hashes ensures the audit is against the pinned, hash-verified packages.
       - name: Export production requirements
-        run: uv export --format requirements-txt --frozen --no-dev -o /tmp/requirements-prod.txt
+        run: uv export --format requirements-txt --frozen --no-dev --no-emit-project -o /tmp/requirements-prod.txt
 
       - name: pip-audit
         run: uvx pip-audit --require-hashes -r /tmp/requirements-prod.txt
