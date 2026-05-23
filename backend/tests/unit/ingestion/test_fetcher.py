@@ -7,7 +7,13 @@ import pytest
 import respx
 
 from app.core.models import Feed
-from app.ingestion.fetcher import FetchResult, PermanentFetchError, TransientFetchError, _parse_date, fetch_feed
+from app.ingestion.fetcher import (
+    FetchResult,
+    PermanentFetchError,
+    TransientFetchError,
+    _parse_date,
+    fetch_feed,
+)
 
 _RSS_XML = """\
 <?xml version="1.0" encoding="UTF-8"?>
