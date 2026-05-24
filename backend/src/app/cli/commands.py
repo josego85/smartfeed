@@ -2,7 +2,7 @@ import asyncio
 
 import typer
 
-from ..api.dependencies import get_repo, get_summarizer, get_vector_store
+from ..api.dependencies import get_classifier, get_repo, get_summarizer, get_vector_store
 from ..core.config import settings
 from ..core.models import Feed
 from ..services.sync_service import FeedSyncService
@@ -34,7 +34,7 @@ def feeds_list():
 def feeds_sync():
     """Sync all feeds via FeedSyncService (fetch, classify, summarize, index)."""
     repo = get_repo()
-    service = FeedSyncService(repo, get_vector_store(), get_summarizer())
+    service = FeedSyncService(repo, get_vector_store(), get_summarizer(), get_classifier())
 
     async def run() -> None:
         feeds = await repo.list_feeds()

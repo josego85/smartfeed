@@ -66,7 +66,8 @@ class TestAddFeed:
 class TestDeleteFeed:
     def test_deletes_existing_feed_returns_204(self, client, mock_repo):
         mock_repo.get_feed.return_value = Feed(id=1, url="https://example.com/rss")
-        assert client.delete("/api/feeds/1").status_code == 204
+        resp = client.delete("/api/feeds/1")
+        assert resp.status_code == 204
 
     def test_calls_repo_delete(self, client, mock_repo):
         mock_repo.get_feed.return_value = Feed(id=1, url="https://example.com/rss")

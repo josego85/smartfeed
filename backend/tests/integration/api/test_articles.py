@@ -97,7 +97,8 @@ class TestDeleteArticle:
         mock_repo.get_article.return_value = Article(
             id=1, feed_id=1, url="https://a.com/1", title="T"
         )
-        assert client.delete("/api/articles/1").status_code == 204
+        resp = client.delete("/api/articles/1")
+        assert resp.status_code == 204
 
     def test_calls_repo_delete(self, client, mock_repo):
         mock_repo.get_article.return_value = Article(
@@ -108,4 +109,5 @@ class TestDeleteArticle:
 
     def test_returns_404_when_not_found(self, client, mock_repo):
         mock_repo.get_article.return_value = None
-        assert client.delete("/api/articles/999").status_code == 404
+        resp = client.delete("/api/articles/999")
+        assert resp.status_code == 404

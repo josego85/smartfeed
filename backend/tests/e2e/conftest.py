@@ -44,23 +44,20 @@ def test_engine():
         )
 
     import app.storage.database as db_mod
-    import app.storage.postgres_repo as repo_mod
 
     _orig_db = db_mod.engine
-    _orig_repo = repo_mod.engine
-
     db_mod.engine = engine
-    repo_mod.engine = engine
 
     # init_db / _migrate use the module-level `engine` by name — now resolved
     # to our test engine because we patched the module globals above.
+    # postgres_repo and vector_store access engine via `database.engine`, so
+    # patching db_mod.engine is sufficient — no need to patch them separately.
     db_mod.init_db()
 
     yield engine
 
     engine.dispose()
     db_mod.engine = _orig_db
-    repo_mod.engine = _orig_repo
 
 
 # ── per-test isolation ────────────────────────────────────────────────────────

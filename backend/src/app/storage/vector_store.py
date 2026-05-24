@@ -4,13 +4,14 @@ from sqlalchemy.orm import Session
 from ..core.interfaces import VectorStore
 from ..core.models import SearchResult
 from ..processing.embeddings import embed
-from .database import ArticleORM, engine
+from . import database
+from .database import ArticleORM
 
 
 class PgVectorStore(VectorStore):
     async def add(self, id: str, text: str, metadata: dict) -> None:
         vec = await embed(text)
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(ArticleORM, int(id))
             if orm:
                 orm.embedding = vec
@@ -27,7 +28,7 @@ class PgVectorStore(VectorStore):
             .order_by("distance")
             .limit(n_results)
         )
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             rows = session.execute(stmt).all()
             return [
                 SearchResult(

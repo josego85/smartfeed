@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -11,6 +12,8 @@ from ..processing.summarizer import LiteLLMSummarizer
 from ..services.sync_service import FeedSyncService
 from ..storage.postgres_repo import PostgresRepository
 from ..storage.vector_store import PgVectorStore
+
+logger = logging.getLogger(__name__)
 
 _PERMANENT_STATUS_MAP = {
     0: FeedStatus.NOT_FOUND,  # invalid URL (no protocol, malformed)
@@ -28,7 +31,7 @@ async def _publish(redis, event: SyncJobEvent) -> None:
     try:
         await asyncio.shield(redis.publish(_CHANNEL, event.model_dump_json()))
     except asyncio.CancelledError:
-        pass
+        logger.debug("Publish cancelled after shield — event may not have reached subscribers")
 
 
 async def sync_feed_job(ctx: dict, feed_id: int) -> dict:
@@ -80,7 +83,7 @@ async def enrich_articles_job(ctx: dict, feed_id: int, article_ids: list[int]) -
     try:
         await service.enrich(article_ids)
     except Exception:
-        pass
+        logger.exception("Enrichment failed — articles remain visible without topic/summary")
     finally:
         await _publish(
             ctx["redis"],
