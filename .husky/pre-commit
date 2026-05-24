@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Backend lint (only if Python files are staged)
+if git diff --cached --name-only | grep -q '\.py$'; then
+  echo "Backend: running ruff..."
+  (cd backend && uv run ruff check . && uv run ruff format --check .) || exit 1
+fi
+
+# Frontend lint (only if TS/JS/JSON files are staged)
+if git diff --cached --name-only | grep -q '\.\(ts\|tsx\|js\|jsx\|json\)$'; then
+  echo "Frontend: running biome..."
+  (cd frontend && pnpm exec biome ci .) || exit 1
+fi
