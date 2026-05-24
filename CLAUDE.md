@@ -307,6 +307,45 @@ OLLAMA_BASE_URL=http://localhost:11434
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
+## CI/CD (GitHub Actions)
+
+Four workflow files under `.github/workflows/` + Dependabot config.
+
+### `ci-backend.yml`
+
+Triggers on push/PR to `main` when `backend/**` changes. Three jobs:
+
+- **lint** — `ruff check` + `ruff format --check`
+- **test-unit-integration** — `pytest --ignore=tests/e2e`; uploads `coverage.xml` artifact
+- **test-e2e** — only on push to `main` (not PRs); uses a GH Actions service container (`pgvector/pgvector:pg17` on port 5433); needs lint + unit/integration to pass first
+
+### `ci-frontend.yml`
+
+Triggers on push/PR to `main` when `frontend/**` changes. Four jobs (fan-in):
+
+- **lint** — `biome ci .` (read-only — do NOT use `pnpm lint` which has `--write`)
+- **type-check** — `pnpm type-check`
+- **test** — `vitest run --passWithNoTests`
+- **build** — `pnpm build`; caches `.next/cache` keyed on `pnpm-lock.yaml`; needs all three above
+
+### `security.yml`
+
+Triggers on push/PR to `main` and weekly (Monday 03:00 UTC). Jobs:
+
+- **codeql** — matrix `[python, javascript-typescript]`; `security-and-quality` queries; uploads SARIF
+- **audit-backend** — `uv export --no-dev` → `uvx pip-audit --require-hashes`
+- **audit-frontend** — `pnpm audit --audit-level=high`
+
+### `dependabot.yml`
+
+Weekly on Monday 04:00 `America/Asuncion` for `pip`, `npm`, and `github-actions`. Dev minor/patch bumps are grouped into a single PR per ecosystem. Action SHAs are auto-bumped.
+
+### Security practices for workflows
+
+- All actions pinned to full commit SHA (e.g. `actions/checkout@de0fac2e...`)
+- `permissions: contents: read` at workflow level; CodeQL adds `security-events: write` only where needed
+- `concurrency.cancel-in-progress: true` on PRs to avoid queue buildup
+
 ## Feed Topics (default)
 
 Topics are stored in the `topics` table and seeded on first startup from `_SEED_TOPICS`
