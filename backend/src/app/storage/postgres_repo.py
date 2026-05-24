@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..core.interfaces import FeedRepository
 from ..core.models import Article, Feed, FeedStatus, Topic
-from .database import ArticleORM, FeedORM, TopicORM, engine
+from . import database
+from .database import ArticleORM, FeedORM, TopicORM
 
 
 def _to_feed(orm: FeedORM) -> Feed:
@@ -42,7 +43,7 @@ def _to_topic(orm: TopicORM) -> Topic:
 
 class PostgresRepository(FeedRepository):
     async def save_feed(self, feed: Feed) -> Feed:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             existing = session.query(FeedORM).filter_by(url=feed.url).first()
             if existing:
                 return _to_feed(existing)
@@ -53,30 +54,30 @@ class PostgresRepository(FeedRepository):
             return _to_feed(orm)
 
     async def list_feeds(self) -> list[Feed]:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             return [_to_feed(f) for f in session.query(FeedORM).all()]
 
     async def get_feed(self, feed_id: int) -> Feed | None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(FeedORM, feed_id)
             return _to_feed(orm) if orm else None
 
     async def delete_feed(self, feed_id: int) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(FeedORM, feed_id)
             if orm:
                 session.delete(orm)
                 session.commit()
 
     async def get_existing_urls(self, feed_id: int) -> set[str]:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             rows = session.query(ArticleORM.url).filter_by(feed_id=feed_id).all()
             return {row.url for row in rows}
 
     async def save_articles_bulk(self, articles: list[Article]) -> list[Article]:
         if not articles:
             return []
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             rows = [
                 {
                     "feed_id": a.feed_id,
@@ -101,14 +102,14 @@ class PostgresRepository(FeedRepository):
             return [_to_article(orm) for orm in saved]
 
     async def update_feed_sync_time(self, feed_id: int, synced_at: datetime) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(FeedORM, feed_id)
             if orm:
                 orm.last_synced_at = synced_at
                 session.commit()
 
     async def update_feed_metadata(self, feed_id: int, title: str, description: str) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(FeedORM, feed_id)
             if orm:
                 if not orm.title and title:
@@ -124,7 +125,7 @@ class PostgresRepository(FeedRepository):
         limit: int = 50,
         offset: int = 0,
     ) -> list[Article]:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             q = (
                 session.query(ArticleORM)
                 .options(joinedload(ArticleORM.topic))
@@ -143,7 +144,7 @@ class PostgresRepository(FeedRepository):
             return [_to_article(a) for a in rows]
 
     async def get_article(self, article_id: int) -> Article | None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = (
                 session.query(ArticleORM)
                 .options(joinedload(ArticleORM.topic))
@@ -153,14 +154,14 @@ class PostgresRepository(FeedRepository):
             return _to_article(orm) if orm else None
 
     async def mark_as_read(self, article_id: int) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(ArticleORM, article_id)
             if orm:
                 orm.is_read = True
                 session.commit()
 
     async def delete_article(self, article_id: int) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(ArticleORM, article_id)
             if orm:
                 orm.is_deleted = True
@@ -169,7 +170,7 @@ class PostgresRepository(FeedRepository):
     async def get_articles_by_ids(self, article_ids: list[int]) -> list[Article]:
         if not article_ids:
             return []
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             rows = (
                 session.query(ArticleORM)
                 .options(joinedload(ArticleORM.topic))
@@ -179,7 +180,7 @@ class PostgresRepository(FeedRepository):
             return [_to_article(orm) for orm in rows]
 
     async def update_article_enrichment(self, article_id: int, topic: str, summary: str) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             topic_orm = session.query(TopicORM).filter_by(name=topic).first()
             orm = session.get(ArticleORM, article_id)
             if orm:
@@ -190,7 +191,7 @@ class PostgresRepository(FeedRepository):
     async def update_feed_status(
         self, feed_id: int, status: FeedStatus, last_error: str | None = None
     ) -> None:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             orm = session.get(FeedORM, feed_id)
             if orm:
                 orm.status = status.value
@@ -198,6 +199,6 @@ class PostgresRepository(FeedRepository):
                 session.commit()
 
     async def list_topics(self) -> list[Topic]:
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             rows = session.query(TopicORM).order_by(TopicORM.name).all()
             return [_to_topic(t) for t in rows]

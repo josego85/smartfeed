@@ -2,8 +2,9 @@ from functools import lru_cache
 
 from fastapi import Request
 
-from ..core.interfaces import FeedRepository, JobQueue, Summarizer, VectorStore
+from ..core.interfaces import Classifier, FeedRepository, JobQueue, Summarizer, VectorStore
 from ..jobs.arq_queue import ArqJobQueue
+from ..processing.classifier import LLMClassifier
 from ..processing.summarizer import LiteLLMSummarizer
 from ..storage.postgres_repo import PostgresRepository
 from ..storage.vector_store import PgVectorStore
@@ -22,6 +23,11 @@ def get_vector_store() -> VectorStore:
 @lru_cache
 def get_summarizer() -> Summarizer:
     return LiteLLMSummarizer()
+
+
+@lru_cache
+def get_classifier() -> Classifier:
+    return LLMClassifier()
 
 
 async def get_queue(request: Request) -> JobQueue:
