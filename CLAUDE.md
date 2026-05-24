@@ -280,6 +280,18 @@ pnpm build   # forces NODE_ENV=production (dev container sets development — wo
 pnpm test
 ```
 
+### Git hooks (Husky)
+
+Hooks live in `.husky/` at repo root. Activated once per clone by running `pnpm install`
+inside `frontend/` (the `prepare` script runs husky from the repo root — no root-level
+`package.json`).
+
+- **pre-commit**: ruff check + format (backend) and biome ci (frontend) — only if relevant
+  files are staged; skips cleanly if neither backend Python nor frontend TS/JS files changed
+- **pre-push**: `pytest --ignore=tests/e2e` + `pnpm type-check`
+
+CI (GitHub Actions) remains the authoritative gate — hooks are a fast local feedback layer.
+
 ### Full stack with Docker
 
 ```bash

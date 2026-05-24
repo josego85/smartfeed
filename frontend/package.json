@@ -12,7 +12,8 @@
     "format": "biome format --write .",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepare": "cd .. && frontend/node_modules/.bin/husky || true"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.15",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "husky": "9.1.7",
     "@tailwindcss/postcss": "^4.1.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",

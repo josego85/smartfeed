@@ -182,6 +182,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `docker-compose.override.yml` backend and worker services: `./backend/src` mounted
   at `/app/src` — source changes reflect instantly without rebuild, matching the
   frontend live-reload pattern
+- Husky `9.1.7` git hooks — `pre-commit` runs ruff + biome only on staged Python/TS
+  files; `pre-push` runs backend unit + integration tests and `pnpm type-check`;
+  installed in `frontend/devDependencies` with `prepare` script activating hooks at
+  repo root — no root-level `package.json` needed
 
 #### Fixed
 
