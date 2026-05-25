@@ -36,7 +36,7 @@ dev = [
     "pytest-mock>=3.14",
     "respx>=0.22",
     "httpx==0.28.1",
-    "ruff==0.15.12",
+    "ruff==0.15.14",
 ]
 
 [tool.coverage.run]
