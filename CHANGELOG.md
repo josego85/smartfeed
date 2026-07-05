@@ -89,6 +89,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `starlette` bumped 1.0.0 → 1.1.0 (PYSEC-2026-161) — transitive via `fastapi`
 - `urllib3` bumped 2.6.3 → 2.7.0 (PYSEC-2026-141, PYSEC-2026-142) — transitive
   via `requests` ← `litellm`; only `uv.lock` updated, `pyproject.toml` unchanged
+- `litellm` bumped 1.83.14 → 1.84.0 (PYSEC-2026-388); `pydantic-settings` bumped
+  2.14.0 → 2.14.2 (GHSA-4xgf-cpjx-pc3j); `aiohttp` bumped 3.13.4 → 3.14.1
+  (11 CVEs, transitive via `litellm`) — resolves all findings from `pip-audit`
 
 ---
 
