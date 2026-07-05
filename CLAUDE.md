@@ -195,16 +195,29 @@ tests/
   no string duplication, referential integrity, rename = one row.
   `GET /api/topics` exposes them. Adding a topic requires only a DB row +
   backend restart (no code change).
-- **LLM classification via `Classifier` interface**: `Classifier` ABC in
-  `core/interfaces.py` (same pattern as `Summarizer`). `LLMClassifier` in
-  `processing/classifier.py` calls the configured LLM via `litellm` with
-  `temperature=0`; topics list is always fetched from DB at runtime and
-  injected by `FeedSyncService.enrich()` — fully dynamic, no cache, no
-  code change needed to add/rename a topic.
+- **Embedding-based classification via `Classifier` interface**: `Classifier` ABC in
+  `core/interfaces.py` (same pattern as `Summarizer`). `EmbeddingClassifier` in
+  `processing/classifier.py` embeds the article (Ollama `nomic-embed-text`, same
+  pipeline as semantic search) and picks the topic whose description embedding has
+  the highest cosine similarity — no LLM completion call, so it's deterministic and
+  cheap. Topic embeddings are computed once per process and cached in-memory
+  (topic id + description as key); topics list is always fetched from DB at runtime
+  and injected by `FeedSyncService.enrich()` — no code change needed to add/rename
+  a topic, only a process restart to pick up the new embedding.
+  If the best match is below `classify_confidence_threshold` (default 0.55), the
+  article is assigned the seeded **"Other"** topic instead of being force-fit into
+  an engineering-specific one — this is what an off-topic consumer-tech article
+  (e.g. a smartphone feature roundup) should land in instead of "Programming".
   Topic seed data lives in `storage/seeds.py` (separate from schema).
   Articles are ordered by `published_at DESC NULLS LAST`.
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
+- **Promotional content filtered at ingestion, by RSS category not title text**:
+  `_is_promotional()` in `ingestion/fetcher.py` skips entries whose `<category>`/`tags`
+  match `Settings.promotional_feed_tags` (default `["coupons", "deals"]`) — coupon/deal
+  listicles are tagged this way by publishers (e.g. Wired's `Coupons` category).
+  Deliberately not title-text matching (e.g. `"% Off"`), since that would false-positive
+  on legitimate editorial articles about pricing.
 - **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
   server-side message loading, automatic browser locale detection via `proxy.ts`.
   Switching language requires zero backend changes — purely frontend.
@@ -365,7 +378,10 @@ in `backend/src/app/storage/database.py`. Each topic has a `name` and a rich key
 `description` used for zero-shot embedding classification.
 
 Default topics: AI & ML, Web Development, DevOps, Programming Languages, Cybersecurity,
-Open Source & Linux, Hardware & Electronics, Science & Research.
+Open Source & Linux, Hardware & Electronics, Science & Research, Consumer Tech & Gadgets
+(smartphones, routers, wearables, TVs, and other consumer device reviews/buying guides —
+distinct from the engineering-focused Hardware & Electronics), Other (catch-all for
+consumer/general tech content that doesn't fit any topic above).
 
 To add a topic: insert a row in `topics` and restart the backend (clears the embedding
 cache — no code or config change needed).

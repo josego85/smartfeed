@@ -30,6 +30,17 @@ class TransientFetchError(FetchError):
     pass
 
 
+def _is_promotional(entry) -> bool:
+    """True if the entry's RSS <category> tags mark it as a coupon/deal listicle.
+
+    Matches on the publisher-provided category, not the title — title text (e.g.
+    "20% Off") is too easy to confuse with a genuine editorial article about prices.
+    """
+    promotional_tags = {t.lower() for t in settings.promotional_feed_tags}
+    entry_tags = {t.get("term", "").lower() for t in entry.get("tags", [])}
+    return bool(entry_tags & promotional_tags)
+
+
 @dataclass
 class FetchResult:
     title: str
@@ -72,6 +83,8 @@ async def fetch_feed(feed: Feed) -> FetchResult:
     articles = []
 
     for entry in parsed.entries:
+        if _is_promotional(entry):
+            continue
         content = entry.get("summary") or (entry.get("content") or [{}])[0].get("value") or ""
         articles.append(
             Article(

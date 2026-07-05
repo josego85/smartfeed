@@ -57,6 +57,34 @@ _EMPTY_RSS_XML = """\
   </channel>
 </rss>"""
 
+_RSS_WITH_COUPON_XML = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Test Feed</title>
+    <description>A test RSS feed</description>
+    <item>
+      <title>Real Article</title>
+      <link>https://example.com/article-1</link>
+      <description>Content of a real article.</description>
+      <category>Gear</category>
+    </item>
+    <item>
+      <title>Dell Coupon Codes: 20% Off for July 2026</title>
+      <link>https://example.com/dell-coupon-code</link>
+      <description>Coupon listicle.</description>
+      <category>Gear</category>
+      <category>Coupons</category>
+    </item>
+    <item>
+      <title>Case Insensitive Deal</title>
+      <link>https://example.com/case-insensitive-deal</link>
+      <description>Coupon listicle with lowercase tag.</description>
+      <category>coupons</category>
+    </item>
+  </channel>
+</rss>"""
+
 
 class TestFetchFeed:
     @respx.mock
@@ -185,6 +213,22 @@ class TestFetchFeed:
         result = await fetch_feed(feed)
         assert result.title == ""
         assert result.description == ""
+
+    @respx.mock
+    async def test_skips_entries_tagged_as_promotional(self):
+        feed = Feed(id=1, url="https://example.com/coupons")
+        respx.get(feed.url).mock(return_value=httpx.Response(200, text=_RSS_WITH_COUPON_XML))
+        result = await fetch_feed(feed)
+        titles = [a.title for a in result.articles]
+        assert titles == ["Real Article"]
+
+    @respx.mock
+    async def test_promotional_tag_match_is_case_insensitive(self):
+        feed = Feed(id=1, url="https://example.com/coupons")
+        respx.get(feed.url).mock(return_value=httpx.Response(200, text=_RSS_WITH_COUPON_XML))
+        result = await fetch_feed(feed)
+        titles = [a.title for a in result.articles]
+        assert "Case Insensitive Deal" not in titles
 
 
 class TestParseDate:

@@ -8,6 +8,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 ## [Unreleased]
 
+### Backend
+
+#### Added
+
+- `EmbeddingClassifier` (`processing/classifier.py`) — zero-shot topic classification via
+  cosine similarity against per-topic description embeddings, replacing `LLMClassifier`;
+  topic embeddings cached in-process; falls back to `"Other"` below
+  `classify_confidence_threshold`
+- `"Consumer Tech & Gadgets"` seed topic (`storage/seeds.py`) — separates consumer device
+  reviews/buying guides from the engineering-focused `"Hardware & Electronics"`; `"Other"`
+  description narrowed accordingly
+- `promotional_feed_tags` setting (`core/config.py`) + `_is_promotional()` filter in
+  `ingestion/fetcher.py` — skips coupon/deal RSS entries at fetch time by matching the
+  publisher's `<category>` tag (not title text, to avoid false positives on legitimate
+  "% off" articles)
+
+### Frontend
+
+#### Added
+
+- `"Consumer Tech & Gadgets"` and `"Other"` entries in `lib/topics.ts` (`TOPICS` +
+  `TOPIC_META`) — were missing from the sidebar topic filter despite existing in the
+  backend `topics` table
+
 ## [0.0.2] - 2026-07-05
 
 ### Backend

@@ -7,6 +7,8 @@ export const TOPICS = [
   "Open Source & Linux",
   "Hardware & Electronics",
   "Science & Research",
+  "Consumer Tech & Gadgets",
+  "Other",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];
@@ -52,6 +54,17 @@ export const TOPIC_META: Record<string, { label: string; color: string; dot: str
     label: "Science",
     color: "bg-teal-100 text-teal-700 border-teal-200",
     dot: "bg-teal-500",
+  },
+  "Consumer Tech & Gadgets": {
+    label: "Gadgets",
+    color: "bg-pink-100 text-pink-700 border-pink-200",
+    dot: "bg-pink-500",
+  },
+  // biome-ignore lint/style/useNamingConvention: topic name matches backend DB value
+  Other: {
+    label: "Other",
+    color: "bg-gray-100 text-gray-700 border-gray-200",
+    dot: "bg-gray-400",
   },
 };
 

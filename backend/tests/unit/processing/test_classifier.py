@@ -1,25 +1,23 @@
-"""Unit tests for LLMClassifier (litellm mocked)."""
+"""Unit tests for EmbeddingClassifier (Ollama embeddings mocked)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.core.config import settings
 from app.core.models import Topic
-from app.processing.classifier import LLMClassifier
+from app.processing.classifier import EmbeddingClassifier
 
-_MODULE = "app.processing.classifier.litellm.acompletion"
+_MODULE = "app.processing.classifier.embed"
 
-
-def _make_llm_response(content: str) -> MagicMock:
-    response = MagicMock()
-    response.choices[0].message.content = content
-    return response
+# Orthogonal-ish 3D vectors so cosine similarity is easy to reason about.
+_AI_VEC = [1.0, 0.0, 0.0]
+_WEB_VEC = [0.0, 1.0, 0.0]
+_DEVOPS_VEC = [0.0, 0.0, 1.0]
 
 
 @pytest.fixture
-def classifier() -> LLMClassifier:
-    return LLMClassifier()
+def classifier() -> EmbeddingClassifier:
+    return EmbeddingClassifier()
 
 
 @pytest.fixture
@@ -28,7 +26,26 @@ def topics() -> list[Topic]:
         Topic(id=1, name="AI & ML", description="machine learning"),
         Topic(id=2, name="Web Development", description="frontend, backend"),
         Topic(id=3, name="DevOps", description="kubernetes, docker"),
+        Topic(id=4, name="Other", description="general consumer tech"),
     ]
+
+
+def _embed_side_effect(topic_vecs: dict[str, list[float]], article_vec: list[float]):
+    async def _embed(text: str) -> list[float]:
+        for description, vec in topic_vecs.items():
+            if description in text:
+                return vec
+        return article_vec
+
+    return _embed
+
+
+_DEFAULT_TOPIC_VECS = {
+    "machine learning": _AI_VEC,
+    "frontend, backend": _WEB_VEC,
+    "kubernetes, docker": _DEVOPS_VEC,
+    "general consumer tech": [-1.0, -1.0, -1.0],
+}
 
 
 class TestClassifyEmptyTopics:
@@ -37,96 +54,43 @@ class TestClassifyEmptyTopics:
         assert result == ""
 
 
-class TestClassifyExactMatch:
-    async def test_returns_matching_topic_name(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("AI & ML")
-            result = await classifier.classify("Deep learning and neural networks", topics)
-        assert result == "AI & ML"
+class TestClassifyBestMatch:
+    async def test_picks_topic_with_highest_cosine_similarity(self, classifier, topics):
+        with patch(
+            _MODULE,
+            new=AsyncMock(side_effect=_embed_side_effect(_DEFAULT_TOPIC_VECS, _WEB_VEC)),
+        ):
+            result = await classifier.classify("An article about React and CSS", topics)
+        assert result == "Web Development"
 
-    async def test_returns_devops_topic(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("DevOps")
-            result = await classifier.classify("Kubernetes deployment strategies", topics)
-        assert result == "DevOps"
+    async def test_caches_topic_embeddings_across_calls(self, classifier, topics):
+        mock_embed = AsyncMock(side_effect=_embed_side_effect(_DEFAULT_TOPIC_VECS, _AI_VEC))
+        with patch(_MODULE, new=mock_embed):
+            await classifier.classify("Neural networks", topics)
+            call_count_after_first = mock_embed.call_count
+            await classifier.classify("More neural networks", topics)
 
-
-class TestClassifyFuzzyMatch:
-    async def test_case_insensitive_match(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("ai & ml")
-            result = await classifier.classify("Some AI text", topics)
-        assert result == "AI & ML"
-
-    async def test_partial_match_in_response(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            # LLM adds extra words — fuzzy match should still resolve
-            mock_llm.return_value = _make_llm_response("AI & ML topic")
-            result = await classifier.classify("Neural network article", topics)
-        assert result == "AI & ML"
+        # Second call should only re-embed the article, not the 4 topics again.
+        assert mock_embed.call_count == call_count_after_first + 1
 
 
-class TestClassifyInvalidResponse:
-    async def test_returns_empty_string_for_unknown_topic(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("Sports News")
-            result = await classifier.classify("Football match results", topics)
+class TestClassifyLowConfidence:
+    async def test_falls_back_to_other_when_below_threshold(self, classifier, topics):
+        topic_vecs = {**_DEFAULT_TOPIC_VECS, "general consumer tech": [0.1, 0.1, 0.1]}
+        # Points away from every specific topic axis -> low cosine similarity to all.
+        article_vec = [-1.0, -1.0, -1.0]
+        with patch(_MODULE, new=AsyncMock(side_effect=_embed_side_effect(topic_vecs, article_vec))):
+            result = await classifier.classify("Buried iPhone feature for kids", topics)
+        assert result == "Other"
+
+    async def test_returns_empty_string_when_no_other_topic_configured(self, classifier):
+        topics_without_other = [Topic(id=1, name="AI & ML", description="machine learning")]
+        article_vec = [-1.0, -1.0, -1.0]
+        with patch(
+            _MODULE,
+            new=AsyncMock(
+                side_effect=_embed_side_effect({"machine learning": _AI_VEC}, article_vec)
+            ),
+        ):
+            result = await classifier.classify("Unrelated content", topics_without_other)
         assert result == ""
-
-
-class TestClassifyLLMCall:
-    async def test_topic_list_included_in_user_message(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("DevOps")
-            await classifier.classify("CI/CD pipeline setup", topics)
-            user_content = mock_llm.call_args[1]["messages"][1]["content"]
-        assert "AI & ML" in user_content
-        assert "Web Development" in user_content
-        assert "DevOps" in user_content
-
-    async def test_uses_temperature_zero(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("AI & ML")
-            await classifier.classify("Article text", topics)
-        assert mock_llm.call_args[1]["temperature"] == 0
-
-    async def test_text_is_truncated_to_max_classify_chars(self, classifier, topics):
-        long_text = "x" * 10_000
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("DevOps")
-            await classifier.classify(long_text, topics)
-            user_content = mock_llm.call_args[1]["messages"][1]["content"]
-        # The article portion must not exceed the char limit
-        assert "x" * (settings.max_classify_chars + 1) not in user_content
-
-    async def test_system_prompt_is_first_message(self, classifier, topics):
-        with patch(_MODULE, new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = _make_llm_response("AI & ML")
-            await classifier.classify("Text", topics)
-            messages = mock_llm.call_args[1]["messages"]
-        assert messages[0]["role"] == "system"
-        assert "classifier" in messages[0]["content"].lower()
-
-
-class TestModelId:
-    def test_ollama_prefix(self, classifier):
-        with (
-            patch.object(settings, "llm_provider", "ollama"),
-            patch.object(settings, "llm_model", "llama3.2"),
-        ):
-            assert classifier._model_id() == "ollama/llama3.2"
-
-    def test_cloud_no_prefix(self, classifier):
-        with (
-            patch.object(settings, "llm_provider", "anthropic"),
-            patch.object(settings, "llm_model", "claude-haiku-4-5"),
-        ):
-            assert classifier._model_id() == "claude-haiku-4-5"
-
-    def test_ollama_api_base_set(self, classifier):
-        with patch.object(settings, "llm_provider", "ollama"):
-            assert classifier._api_base() == settings.ollama_base_url
-
-    def test_cloud_api_base_is_none(self, classifier):
-        with patch.object(settings, "llm_provider", "openai"):
-            assert classifier._api_base() is None
