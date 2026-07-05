@@ -89,6 +89,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `starlette` bumped 1.0.0 → 1.1.0 (PYSEC-2026-161) — transitive via `fastapi`
 - `urllib3` bumped 2.6.3 → 2.7.0 (PYSEC-2026-141, PYSEC-2026-142) — transitive
   via `requests` ← `litellm`; only `uv.lock` updated, `pyproject.toml` unchanged
+- `litellm` bumped 1.83.14 → 1.84.0 (PYSEC-2026-388); `pydantic-settings` bumped
+  2.14.0 → 2.14.2 (GHSA-4xgf-cpjx-pc3j); `aiohttp` bumped 3.13.4 → 3.14.1
+  (11 CVEs, transitive via `litellm`) — resolves all findings from `pip-audit`
 
 ---
 
@@ -142,6 +145,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `next-intl` bumped to `^4.12.0` (GHSA-r27j-894h-3w3p) — transitive
   `icu-minify@<=4.9.1` prototype-key DoS in `select` formatters with
   `precompile: true`; patched in `icu-minify@4.9.2` bundled by `next-intl@4.12.0`
+- `vitest`/`@vitest/ui` bumped `^2.1.0` → `^3.2.6` (GHSA-5xrq-8626-4rwp,
+  critical — arbitrary file read/execute when Vitest UI server is listening);
+  `vite` pnpm override tightened to `>=6.4.3` (GHSA-fx2h-pf6j-xcff,
+  GHSA-v6wh-96g9-6wx3); added `@babel/core` pnpm override `>=7.29.6`
+  (GHSA-4x5r-pxfx-6jf8) — resolves all findings from `pnpm audit`
 - `@vitejs/plugin-react` bumped 4.x → `^5.2.0`; `pnpm.overrides`:
   `vite >= 6.4.2` (GHSA-4w7w-66w2-5vf9 path traversal + GHSA-67mh-4wv8-2f99
   esbuild dev-server CORS) and `postcss >= 8.5.10` (GHSA-qx2v-qp2m-jg93 XSS

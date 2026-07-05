@@ -37,16 +37,18 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/ui": "^2.1.0",
+    "@vitest/ui": "^3.2.6",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
+    "vitest": "^3.2.6"
   },
   "pnpm": {
     "overrides": {
-      "vite": ">=6.4.2 <7",
-      "postcss": ">=8.5.10"
-    }
+      "vite": ">=6.4.3 <7",
+      "postcss": ">=8.5.10",
+      "@babel/core": ">=7.29.6"
+    },
+    "onlyBuiltDependencies": ["@biomejs/biome", "@parcel/watcher", "@swc/core", "esbuild", "sharp"]
   }
 }
