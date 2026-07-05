@@ -4,7 +4,7 @@ from fastapi import Request
 
 from ..core.interfaces import Classifier, FeedRepository, JobQueue, Summarizer, VectorStore
 from ..jobs.arq_queue import ArqJobQueue
-from ..processing.classifier import LLMClassifier
+from ..processing.classifier import EmbeddingClassifier
 from ..processing.summarizer import LiteLLMSummarizer
 from ..storage.postgres_repo import PostgresRepository
 from ..storage.vector_store import PgVectorStore
@@ -27,7 +27,7 @@ def get_summarizer() -> Summarizer:
 
 @lru_cache
 def get_classifier() -> Classifier:
-    return LLMClassifier()
+    return EmbeddingClassifier()
 
 
 async def get_queue(request: Request) -> JobQueue:

@@ -76,4 +76,24 @@ SEED_TOPICS: list[dict] = [
             "peer-reviewed journals or announced by research institutions."
         ),
     },
+    {
+        "name": "Consumer Tech & Gadgets",
+        "description": (
+            "Articles about consumer electronics and gadgets, including smartphones, laptops, "
+            "tablets, smartwatches, wireless earbuds and headphones, Wi-Fi routers and mesh "
+            "networking gear, smart home devices, TVs and streaming boxes, wearables, chargers "
+            "and power banks, and other personal tech devices — product reviews, buying guides, "
+            "hands-on impressions, and hardware comparisons aimed at everyday consumers rather "
+            "than engineers or developers."
+        ),
+    },
+    {
+        "name": "Other",
+        "description": (
+            "General or consumer technology content that does not fit a specific engineering "
+            "category above — app and product feature roundups, tech industry business news, "
+            "parental controls and digital wellbeing tips, social media platform news, and "
+            "everyday tech lifestyle articles aimed at general readers rather than practitioners."
+        ),
+    },
 ]

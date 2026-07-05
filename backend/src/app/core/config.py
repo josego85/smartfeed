@@ -27,8 +27,14 @@ class Settings(BaseSettings):
     embedding_model: str = "nomic-embed-text"
     embedding_dim: int = 768  # must match the embedding model output
 
+    # ── Ingestion ─────────────────────────────────────────────────────────────
+    # RSS <category> terms (case-insensitive) that mark an entry as promotional
+    # (coupon/deal listicles) rather than editorial content — skipped at fetch time.
+    promotional_feed_tags: list[str] = ["coupons", "deals"]
+
     # ── Processing ────────────────────────────────────────────────────────────
     max_classify_chars: int = 2000  # chars fed to the classifier
+    classify_confidence_threshold: float = 0.55  # below this cosine similarity, topic = "Other"
     max_summarize_chars: int = 4000  # chars sent to the LLM summarizer
     sync_concurrency: int = 3  # parallel enrich tasks per sync job
 

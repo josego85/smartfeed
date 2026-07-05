@@ -7,7 +7,7 @@ from arq.connections import RedisSettings
 from ..core.config import settings
 from ..core.models import FeedStatus, SyncJobEvent, SyncResult
 from ..ingestion.fetcher import PermanentFetchError
-from ..processing.classifier import LLMClassifier
+from ..processing.classifier import EmbeddingClassifier
 from ..processing.summarizer import LiteLLMSummarizer
 from ..services.sync_service import FeedSyncService
 from ..storage.postgres_repo import PostgresRepository
@@ -109,7 +109,7 @@ async def startup(ctx: dict) -> None:
     repo = PostgresRepository()
     ctx["repo"] = repo
     ctx["sync_service"] = FeedSyncService(
-        repo, PgVectorStore(), LiteLLMSummarizer(), LLMClassifier()
+        repo, PgVectorStore(), LiteLLMSummarizer(), EmbeddingClassifier()
     )
 
 
