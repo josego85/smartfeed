@@ -212,6 +212,12 @@ tests/
   Articles are ordered by `published_at DESC NULLS LAST`.
 - **Interfaces in `core/`**: swapping any backend (vector store, LLM, DB) requires only a new
   adapter — no business logic changes.
+- **Promotional content filtered at ingestion, by RSS category not title text**:
+  `_is_promotional()` in `ingestion/fetcher.py` skips entries whose `<category>`/`tags`
+  match `Settings.promotional_feed_tags` (default `["coupons", "deals"]`) — coupon/deal
+  listicles are tagged this way by publishers (e.g. Wired's `Coupons` category).
+  Deliberately not title-text matching (e.g. `"% Off"`), since that would false-positive
+  on legitimate editorial articles about pricing.
 - **`next-intl` for i18n**: SEO-friendly locale-prefixed routes (`/en/`, `/es/`, `/de/`),
   server-side message loading, automatic browser locale detection via `proxy.ts`.
   Switching language requires zero backend changes — purely frontend.
