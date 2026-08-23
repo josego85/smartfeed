@@ -24,6 +24,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
   publisher's `<category>` tag (not title text, to avoid false positives on legitimate
   "% off" articles)
 
+#### Security
+
+- `aiohttp` bumped 3.14.1 → 3.14.3 (PYSEC-2026-3545, PYSEC-2026-3546, PYSEC-2026-3547) —
+  transitive via `litellm`; `pip-audit --require-hashes` clean
+
 ### Frontend
 
 #### Added
@@ -31,6 +36,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 - `"Consumer Tech & Gadgets"` and `"Other"` entries in `lib/topics.ts` (`TOPICS` +
   `TOPIC_META`) — were missing from the sidebar topic filter despite existing in the
   backend `topics` table
+
+#### Security
+
+- `next` bumped 16.2.6 → 16.2.11 (GHSA-6gpp-xcg3-4w24 proxy bypass, GHSA-m99w-x7hq-7vfj
+  Server Actions DoS, GHSA-89xv-2m56-2m9x / GHSA-p9j2-gv94-2wf4 SSRF, plus 4 moderate
+  findings) — 7 CVEs resolved
+- `sharp` pinned to `0.35.3` via `pnpm.overrides` (GHSA-f88m-g3jw-g9cj libvips CVEs) —
+  `next` still requires `^0.34.5` internally, so the override is required even after
+  the `next` bump
+- `postcss` bumped to `8.5.23` (direct dep + override) (GHSA-6g55-p6wh-862q,
+  GHSA-r28c-9q8g-f849, GHSA-fxqj-rqcc-2cmp sourceMappingURL path traversal /
+  arbitrary file read); `nanoid` transitively resolves to `3.3.18`
+  (GHSA-28wg-ghj8-5hjv, GHSA-2v37-7h3g-55p8)
+- `pnpm audit` clean — 0 known vulnerabilities
 
 ## [0.0.2] - 2026-07-05
 

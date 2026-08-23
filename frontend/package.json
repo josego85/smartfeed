@@ -21,7 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
-    "next": "16.2.6",
+    "next": "16.2.11",
     "next-intl": "^4.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -38,7 +38,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/ui": "^3.2.6",
-    "postcss": "^8.5.0",
+    "postcss": "8.5.23",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
     "vitest": "^3.2.6"
@@ -46,8 +46,9 @@
   "pnpm": {
     "overrides": {
       "vite": ">=6.4.3 <7",
-      "postcss": ">=8.5.10",
-      "@babel/core": ">=7.29.6"
+      "postcss": "8.5.23",
+      "@babel/core": ">=7.29.6",
+      "sharp": "0.35.3"
     },
     "onlyBuiltDependencies": ["@biomejs/biome", "@parcel/watcher", "@swc/core", "esbuild", "sharp"]
   }
