@@ -24,6 +24,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
   publisher's `<category>` tag (not title text, to avoid false positives on legitimate
   "% off" articles)
 
+#### Security
+
+- `aiohttp` bumped 3.14.1 → 3.14.3 (PYSEC-2026-3545, PYSEC-2026-3546, PYSEC-2026-3547) —
+  transitive via `litellm`; `pip-audit --require-hashes` clean
+
 ### Frontend
 
 #### Added
