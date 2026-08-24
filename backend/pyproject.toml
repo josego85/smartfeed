@@ -30,13 +30,13 @@ packages = ["src/app"]
 
 [dependency-groups]
 dev = [
-    "pytest==9.0.3",
-    "pytest-asyncio==1.3.0",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
     "pytest-cov>=6.0",
     "pytest-mock>=3.14",
     "respx>=0.22",
     "httpx==0.28.1",
-    "ruff==0.15.12",
+    "ruff==0.16.4",
 ]
 
 [tool.coverage.run]
