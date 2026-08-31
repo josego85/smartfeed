@@ -30,7 +30,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "husky": "9.1.7",
-    "@tailwindcss/postcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.0",
@@ -38,7 +38,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/ui": "^3.2.6",
-    "postcss": "8.5.23",
+    "postcss": "8.5.26",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
     "vitest": "^3.2.6"
@@ -46,7 +46,7 @@
   "pnpm": {
     "overrides": {
       "vite": ">=6.4.3 <7",
-      "postcss": "8.5.23",
+      "postcss": "8.5.26",
       "@babel/core": ">=7.29.6",
       "sharp": "0.35.3"
     },
