@@ -41,19 +41,17 @@ export default async function RootLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
-      <body className={`${inter.className} bg-white`}>
-        <NextIntlClientProvider>
-          <Providers>
-            <div className="flex h-screen overflow-hidden">
-              <Suspense>
-                <Sidebar />
-              </Suspense>
-              <main className="flex-1 overflow-y-auto">{children}</main>
-            </div>
-          </Providers>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <div className={`${inter.className} bg-white`}>
+      <NextIntlClientProvider>
+        <Providers>
+          <div className="flex h-screen overflow-hidden">
+            <Suspense>
+              <Sidebar />
+            </Suspense>
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </div>
+        </Providers>
+      </NextIntlClientProvider>
+    </div>
   );
 }

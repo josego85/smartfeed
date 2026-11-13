@@ -1,13 +1,13 @@
-FROM python:3.12-slim
+FROM python:3.13.18-slim
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uv
+RUN pip install --no-cache-dir uv==0.13.8
 
-COPY pyproject.toml .
-RUN uv sync --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
 COPY src/ src/
 

@@ -6,7 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 ---
 
-## [Unreleased]
+## [0.0.3] - 2026-11-13
 
 ### Backend
 
@@ -24,12 +24,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
   publisher's `<category>` tag (not title text, to avoid false positives on legitimate
   "% off" articles)
 
+#### Changed
+
+- Backend runtime moved from Python 3.12 to 3.13.18; project requirement and Ruff target
+  now specify Python 3.13
+- Docker builds install dependencies from the frozen `uv.lock` using pinned `uv` 0.13.8
+- All direct runtime and development dependencies are pinned to exact stable versions;
+  upgraded FastAPI to 0.162.6, SQLAlchemy to 2.1.8, and the remaining packages to the
+  latest stable releases
+- Replaced `psycopg2-binary` with `psycopg[binary]` 3.3.9 because SQLAlchemy 2.1 uses
+  psycopg 3 by default for PostgreSQL URLs
+
 #### Security
 
-- `aiohttp` bumped 3.14.1 → 3.14.3 (PYSEC-2026-3545, PYSEC-2026-3546, PYSEC-2026-3547) —
-  transitive via `litellm`; `pip-audit --require-hashes` clean
+- `litellm` bumped 1.84.0 → 1.109.1 to address known LiteLLM proxy security advisories
+- Updated vulnerable transitive dependencies: `aiohttp` 3.14.3 → 3.14.5, `anyio` 4.14.1 →
+  4.16.0, `filelock` 3.29.5 → 4.2.10, `multidict` 6.7.1 → 7.2.1, `pyjwt` 2.13.0 → 2.15.1,
+  and `urllib3` 2.7.0 → 2.8.0; `uv audit` reports no known vulnerabilities in 98 packages
 
 ### Frontend
+
+#### Changed
+
+- Updated Next.js to 16.4.6 and Vitest to 4.1.12; pinned Vite to 6.4.6 and refreshed
+  frontend security overrides and lockfile
 
 #### Added
 
@@ -39,10 +57,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) —
 
 #### Security
 
-- `next` bumped 16.2.6 → 16.2.11 (GHSA-6gpp-xcg3-4w24 proxy bypass, GHSA-m99w-x7hq-7vfj
+- `next` bumped 16.2.6 → 16.4.6 (GHSA-6gpp-xcg3-4w24 proxy bypass, GHSA-m99w-x7hq-7vfj
   Server Actions DoS, GHSA-89xv-2m56-2m9x / GHSA-p9j2-gv94-2wf4 SSRF, plus 4 moderate
   findings) — 7 CVEs resolved
-- `sharp` pinned to `0.35.3` via `pnpm.overrides` (GHSA-f88m-g3jw-g9cj libvips CVEs) —
+- `sharp` pinned to `0.35.5` via `pnpm.overrides` (GHSA-f88m-g3jw-g9cj libvips CVEs) —
   `next` still requires `^0.34.5` internally, so the override is required even after
   the `next` bump
 - `postcss` bumped to `8.5.23` (direct dep + override) (GHSA-6g55-p6wh-862q,
