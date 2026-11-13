@@ -110,7 +110,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 | Layer | Technology |
 |---|---|
-| Language | Python 3.12+ |
+| Language | Python 3.13 |
 | Package manager | `uv` |
 | HTTP client | `httpx` (async) |
 | RSS parsing | `feedparser` |
@@ -255,7 +255,7 @@ tests/
   `list[Article]`. `FeedSyncService.sync()` calls `FeedRepository.update_feed_metadata()`
   after the first successful fetch — idempotent: only writes when the field is empty,
   preserving future manual edits.
-- **`ca-certificates` in backend Dockerfile**: `python:3.12-slim` ships without system
+- **`ca-certificates` in backend Dockerfile**: the Python slim image ships without system
   CA certificates; `httpx`/`anyio` TLS handshake fails silently with `ConnectError`
   for all HTTPS feeds. `backend/Dockerfile` installs `ca-certificates` via
   `apt-get install --no-install-recommends ca-certificates`.

@@ -1,6 +1,6 @@
 {
   "name": "smartfeed-frontend",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "packageManager": "pnpm@10.11.0",
   "scripts": {
@@ -21,7 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
-    "next": "16.2.11",
+    "next": "16.4.6",
     "next-intl": "^4.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "husky": "9.1.7",
     "@tailwindcss/postcss": "^4.1.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",
@@ -37,18 +36,24 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/ui": "^3.2.6",
+    "@vitest/ui": "^4.1.12",
+    "husky": "9.1.7",
     "postcss": "8.5.23",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.6"
+    "vite": "6.4.6",
+    "vitest": "^4.1.12"
   },
   "pnpm": {
     "overrides": {
-      "vite": ">=6.4.3 <7",
+      "vite": "6.4.6",
       "postcss": "8.5.23",
       "@babel/core": ">=7.29.6",
-      "sharp": "0.35.3"
+      "sharp": "0.35.5",
+      "browserslist": ">=4.29.5",
+      "baseline-browser-mapping": ">=2.11.37",
+      "fflate": ">=0.8.3",
+      "source-map-js": ">=1.2.2"
     },
     "onlyBuiltDependencies": ["@biomejs/biome", "@parcel/watcher", "@swc/core", "esbuild", "sharp"]
   }
