@@ -12,7 +12,7 @@ dependencies = [
     "sqlalchemy==2.1.8",
     "psycopg[binary]==3.3.9",
     "pgvector==0.5.1",
-    "litellm==1.109.1",
+    "litellm==1.110.2",
     "typer==0.29.1",
     "numpy==2.5.4",
     "arq==0.28.0",
